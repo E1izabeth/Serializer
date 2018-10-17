@@ -6,25 +6,33 @@ using System.Threading.Tasks;
 
 namespace Serializer
 {
+    public enum Colour : byte
+    {
+        Red = 0,
+        Green = 1,
+        Yellow = 2
+    }
+    public class Apple
+    {
+        public Colour Colour { get; set; }
+        private int taste;
+
+        public Apple(Colour colour, int taste)
+        {
+            this.Colour = colour;
+            this.taste = taste;
+        }
+    }
+
     class Program
     {
-        public enum Colour : byte
-        {
-            Red = 0,
-            Green = 1,
-            Yellow = 2
-        }
 
         static void Main(string[] args)
         {
-            //collections
             var serializer = new MySerializer();
-            int[][]arr = new int[2][];
-            arr[0] = new int[2];
-            arr[1] = new int[3];
+            var apple = new Apple(Colour.Red, 5);
 
-            
-            var binary = serializer.Serialize(arr);
+            var binary = serializer.Serialize(apple);
             var v = serializer.Deserialize(binary);
         }
     }

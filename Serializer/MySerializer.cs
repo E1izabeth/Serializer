@@ -54,6 +54,45 @@ namespace Serializer
             return SerializeTypeEnum.Custom;
         }
 
+        public static int[] GetNewIndexes(int rank, int[] dim, int[] indexes, ref int currDim)
+        {
+            var succ = false;
+            while (currDim < rank && !succ)
+            {
+                if (currDim != rank)
+                {
+                    if (indexes[currDim] == dim[currDim] - 1)
+                    {
+                        indexes[currDim] = 0;
+                        currDim++;
+                    }
+                    else
+                    {
+                        indexes[currDim]++;
+                        succ = true;
+                    }
+                }
+                else
+                {
+                    if (indexes[currDim] == dim[currDim])
+                    {
+                        succ = true;
+                    }
+                    else
+                    {
+                        indexes[currDim]++;
+                        succ = true;
+                    }
+                }
+            }
+            if (succ)
+            {
+                currDim = 0;
+            }
+            return indexes;
+        }
+
+
         public byte[] Serialize(object obj)
         {
             var stream = new MemoryStream();
@@ -69,7 +108,20 @@ namespace Serializer
                 var dim = new int[rank];
                 for (int i = 0; i < rank; i++)
                 {
+                    dim[i] = (obj as Array).GetLength(i);
                     stream.WriteInt32((obj as Array).GetLength(i));
+                }
+                int[] ind = new int[rank];
+                int currDim = 0;
+                int count = 1;
+                for (int i = 0; i < rank; i++)
+                {
+                    count *= dim[i];
+                }
+                for (int i = 0; i < count; i++)
+                {
+                    ind = GetNewIndexes(rank, dim, ind, ref currDim);
+                    WritePrimitiveOrStringType(stream, (obj as Array).GetValue(ind));
                 }
             }
             else if (t.IsEnum)
@@ -123,6 +175,19 @@ namespace Serializer
                 dim[i] = stream.ReadInt32();
             }
             var arr = Array.CreateInstance(type, dim);
+            int currDim = 0;
+            int count = 1;
+            var ind = new int[rank];
+            for (int i = 0; i < rank; i++)
+            {
+                count *= dim[i];
+            }
+            for (int i = 0; i < count; i++)
+            {
+                ind = GetNewIndexes(rank, dim, ind, ref currDim);
+                var val = ReadPrimitiveOrStringType(stream, type);
+                arr.SetValue(val, ind);
+            }
             return arr;
         }
 
