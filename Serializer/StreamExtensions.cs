@@ -10,6 +10,7 @@ namespace Serializer
 {
     public static class StreamExtensions
     {
+
         public static byte ReadByte(this Stream s)
         {
             return (byte)s.ReadByte();
@@ -76,6 +77,11 @@ namespace Serializer
             byte[] temp = new byte[count];
             s.Read(temp, 0, count);
             return Encoding.UTF8.GetString(temp);
+        }
+
+        public static void WriteNULL(this Stream s)
+        {
+            s.WriteStringWithLength("NULL");
         }
 
         public static void WriteInt32(this Stream s, int v)
@@ -271,6 +277,111 @@ namespace Serializer
         public static bool ReadBool(this Stream s)
         {
             return s.ReadByte() == 1;
+        }
+
+        public static object ReadPrimitiveOrStringType(this Stream stream, Type type)
+        {
+            if (type == typeof(Byte))
+            {
+                return stream.ReadByte();
+            }
+            else if (type == typeof(Boolean))
+            {
+                return stream.ReadBool();
+            }
+            else if (type == typeof(short))
+            {
+                return stream.ReadInt16();
+            }
+            else if (type == typeof(ushort))
+            {
+                return stream.ReadUInt16();
+            }
+            else if (type == typeof(int))
+            {
+                return stream.ReadInt32();
+            }
+            else if (type == typeof(uint))
+            {
+                return stream.ReadUInt32();
+            }
+            else if (type == typeof(long))
+            {
+                return stream.ReadInt64();
+            }
+            else if (type == typeof(ulong))
+            {
+                return stream.ReadUInt64();
+            }
+            else if (type == typeof(float))
+            {
+                return stream.ReadFloat();
+            }
+            else if (type == typeof(double))
+            {
+                return stream.ReadDouble();
+            }
+            else if (type == typeof(string))
+            {
+                return stream.ReadString();
+            }
+            else return null;
+        }
+
+
+        public static void WritePrimitiveOrStringType(this Stream stream, object obj)
+        {
+            Type t = obj.GetType();
+
+            if (t == typeof(Byte))
+            {
+                stream.WriteByte((byte)obj);
+            }
+            else if (t == typeof(Boolean))
+            {
+                stream.WriteBool((bool)obj);
+            }
+            else if (t == typeof(short))
+            {
+                stream.WriteInt16((short)obj);
+            }
+            else if (t == typeof(ushort))
+            {
+                stream.WriteUInt16((ushort)obj);
+            }
+            else if (t == typeof(int))
+            {
+                stream.WriteInt32((int)obj);
+            }
+            else if (t == typeof(uint))
+            {
+                stream.WriteUInt32((uint)obj);
+            }
+            else if (t == typeof(long))
+            {
+                stream.WriteInt64((long)obj);
+            }
+            else if (t == typeof(ulong))
+            {
+                stream.WriteUInt64((ulong)obj);
+            }
+            else if (t == typeof(float))
+            {
+                stream.WriteFloat((float)obj);
+            }
+            else if (t == typeof(double))
+            {
+                stream.WriteDouble((double)obj);
+            }
+            else if (t == typeof(string))
+            {
+                stream.WriteStringWithLength((string)obj);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
         }
     }
 }

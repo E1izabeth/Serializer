@@ -2,35 +2,38 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Serializer
 {
+    public enum SerializeTypeEnum : byte
+    {
+        Null = 0,
+        Byte = 1,
+        Bool = 2,
+        Int16 = 3,
+        Int32 = 4,
+        Int64 = 5,
+        UInt16 = 6,
+        UInt32 = 7,
+        UInt64 = 8,
+        Float = 9,
+        Double = 10,
+        String = 11,
+        Enum = 12,
+        ArrayOfStruct = 13,
+        ArrayOfByref = 14,
+        Custom = 15
+    }
+
     public class MySerializer
     {
-        public enum SerializeTypeEnum : byte
-        {
-            None = 0,
-            Byte = 1,
-            Bool = 2,
-            Int16 = 3,
-            Int32 = 4,
-            Int64 = 5,
-            UInt16 = 6,
-            UInt32 = 7,
-            UInt64 = 8,
-            Float = 9,
-            Double = 10,
-            String = 11,
-            Enum = 12,
-            Array = 13,
-            Custom = 14,
-        }
-
         private static Dictionary<Type, SerializeTypeEnum> _typeMap = new Dictionary<Type, SerializeTypeEnum>{
             { typeof(byte), SerializeTypeEnum.Byte},
             { typeof(bool), SerializeTypeEnum.Bool},
@@ -43,8 +46,6 @@ namespace Serializer
             { typeof(float), SerializeTypeEnum.Float},
             { typeof(double), SerializeTypeEnum.Double},
             { typeof(string), SerializeTypeEnum.String},
-            { typeof(Enum), SerializeTypeEnum.Enum},
-            { typeof(Array), SerializeTypeEnum.Array}
         };
 
         public static SerializeTypeEnum GetTypeEnum(Type t)
@@ -93,81 +94,176 @@ namespace Serializer
         }
 
 
-        public byte[] Serialize(object obj)
+        public void Serialize(object obj, Stream stream)
         {
-            var stream = new MemoryStream();
-            Type t = obj.GetType();
-            if (t.IsArray)
+            if (obj is null)
             {
-                stream.WriteByte((byte)(byte)GetTypeEnum(t.BaseType));
-                stream.WriteByte((byte)GetTypeEnum(t.GetElementType()));
-                var len = (int)t.GetProperty("Length").GetValue(obj);
-                stream.WriteInt32(len);
-                var rank = t.GetArrayRank();
-                stream.WriteInt32(rank);
-                var dim = new int[rank];
-                for (int i = 0; i < rank; i++)
-                {
-                    dim[i] = (obj as Array).GetLength(i);
-                    stream.WriteInt32((obj as Array).GetLength(i));
-                }
-                int[] ind = new int[rank];
-                int currDim = 0;
-                int count = 1;
-                for (int i = 0; i < rank; i++)
-                {
-                    count *= dim[i];
-                }
-                for (int i = 0; i < count; i++)
-                {
-                    ind = GetNewIndexes(rank, dim, ind, ref currDim);
-                    WritePrimitiveOrStringType(stream, (obj as Array).GetValue(ind));
-                }
-            }
-            else if (t.IsEnum)
-            {
-                WriteEnumType(stream, t);
+                stream.WriteByte((byte)SerializeTypeEnum.Null);
             }
             else
             {
-                stream.WriteByte((byte)GetTypeEnum(t));
-
-                if (t.IsPrimitive || t.Name == typeof(string).Name)
+                Type t = obj.GetType();
+                if (t.IsArray)
                 {
-                    WritePrimitiveOrStringType(stream, obj);
+                    this.WriteArray(stream, obj);
+                }
+                else if (t.IsEnum)
+                {
+                    this.WriteEnum(stream, obj);
+                }
+                else if (t.IsPrimitive || t.Name == typeof(string).Name)
+                {
+                    stream.WriteByte((byte)GetTypeEnum(t));
+                    stream.WritePrimitiveOrStringType(obj);
+                }
+                else
+                {
+                    var fieldsInfo = t.GetFields(BindingFlags.Public | BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+                    stream.WriteByte((byte)SerializeTypeEnum.Custom);
+                    stream.WritePrimitiveOrStringType(t.Assembly.FullName.ToString());
+                    stream.WritePrimitiveOrStringType(t.FullName.ToString());
+                    stream.WriteInt32(fieldsInfo.Count());
+                    foreach (var f in fieldsInfo)
+                    {
+                        this.Serialize(f.GetValue(obj), stream);
+                    }
                 }
             }
-            return stream.ToArray();
         }
 
-        public object Deserialize(byte[] b)
+        private void WriteEnum(Stream stream, object obj)
+        {
+            stream.WriteByte((byte)SerializeTypeEnum.Enum);
+            var t = obj.GetType();
+            var rawValue = Convert.ChangeType(obj, t.GetEnumUnderlyingType());
+            stream.WritePrimitiveOrStringType(t.Assembly.FullName.ToString());
+            stream.WritePrimitiveOrStringType(t.FullName.ToString());
+
+            stream.WritePrimitiveOrStringType(rawValue);
+        }
+
+        public object Deserialize(Stream stream)
         {
             object o = null;
-            var stream = new MemoryStream(b);
             SerializeTypeEnum t = (SerializeTypeEnum)stream.ReadByte();
-            Type type = _typeMap.FirstOrDefault(s => s.Value == t).Key;
 
-            if (type.IsPrimitive || type.Name == typeof(string).Name)
+            switch (t)
             {
-                o = ReadPrimitiveOrStringType(stream, type);
-            }
-            else if (type.IsEnum || typeof(Enum).Name == type.Name)
-            {
-                o = ReadEnumType(stream);
-            }
-            else if (type.IsArray || typeof(Array).Name == type.Name)
-            {
-                o = ReadArray(stream);
+                case SerializeTypeEnum.Byte:
+                case SerializeTypeEnum.Bool:
+                case SerializeTypeEnum.Int16:
+                case SerializeTypeEnum.Int32:
+                case SerializeTypeEnum.Int64:
+                case SerializeTypeEnum.UInt16:
+                case SerializeTypeEnum.UInt32:
+                case SerializeTypeEnum.UInt64:
+                case SerializeTypeEnum.Float:
+                case SerializeTypeEnum.Double:
+                case SerializeTypeEnum.String:
+                    {
+                        var type = _typeMap.FirstOrDefault(s => s.Value == t).Key;
+                        o = stream.ReadPrimitiveOrStringType(type);
+                    }
+                    break;
+                case SerializeTypeEnum.Enum:
+                    {
+                        var assemblyName = stream.ReadString();
+                        var fullname = stream.ReadString();
+                        var enumType = Assembly.Load(assemblyName).GetType(fullname);
+                        
+                        o = Enum.ToObject(enumType, stream.ReadPrimitiveOrStringType(enumType.GetEnumUnderlyingType()));
+                    }
+                    break;
+                case SerializeTypeEnum.ArrayOfByref:
+                    {
+                        o = this.ReadArrayOfByRef(stream);
+                    }
+                    break;
+                case SerializeTypeEnum.ArrayOfStruct:
+                    {
+                        o = this.ReadArrayOfStruct(stream);
+                    }
+                    break;
+                case SerializeTypeEnum.Custom:
+                    {
+                        var assemblyName = stream.ReadString();
+                        var fullname = stream.ReadString();
+                        var fcount = stream.ReadInt32();
+                        var flist = new List<object>();
+                        for (int i = 0; i < fcount; i++)
+                        {
+                            flist.Add(this.Deserialize(stream));
+                        }
+                        var objType = Assembly.Load(assemblyName).GetType(fullname);
+                        o = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(objType);
+                        var fields = o.GetType().GetFields(BindingFlags.Public | BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+                        int j = 0;
+                        foreach (var f in fields)
+                        {
+                            f.SetValue(o, flist[j]);
+                            ++j;
+                        }
+                    }
+                    break;
+                case SerializeTypeEnum.Null:
+                    {
+                        o = null;
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
 
             return o;
         }
 
-        private static object ReadArray(MemoryStream stream)
+        private void WriteArray(Stream stream, object obj)
+        {
+            var type = GetTypeEnum(obj.GetType().GetElementType());
+            if (type == SerializeTypeEnum.Custom)
+            {
+                stream.WriteByte((byte)SerializeTypeEnum.ArrayOfByref);
+            }
+            else
+            {
+                stream.WriteByte((byte)SerializeTypeEnum.ArrayOfStruct);
+                stream.WriteByte((byte)GetTypeEnum(obj.GetType().GetElementType()));
+            }
+            Array arr = (Array)obj;
+            var rank = obj.GetType().GetArrayRank();
+            stream.WriteInt32(rank);
+            var dim = new int[rank];
+            for (int i = 0; i < rank; i++)
+            {
+                dim[i] = (obj as Array).GetLength(i);
+                stream.WriteInt32((obj as Array).GetLength(i));
+            }
+            int[] ind = new int[rank];
+            int currDim = 0;
+            int count = 1;
+            for (int i = 0; i < rank; i++)
+            {
+                count *= dim[i];
+            }
+            for (int i = 0; i < count; i++)
+            {
+                ind = GetNewIndexes(rank, dim, ind, ref currDim);
+                if (type == SerializeTypeEnum.Custom)
+                {
+                    this.Serialize((obj as Array).GetValue(ind), stream);
+                }
+                else
+                {
+                    stream.WritePrimitiveOrStringType((obj as Array).GetValue(ind));
+                }
+            }
+        }
+
+        private object ReadArrayOfStruct(Stream stream)
         {
             SerializeTypeEnum t = (SerializeTypeEnum)stream.ReadByte();
-            Type type = _typeMap.FirstOrDefault(s => s.Value == t).Key;
-            var len = stream.ReadInt32();
+            var type = _typeMap.FirstOrDefault(s => s.Value == t).Key;
+
             var rank = stream.ReadInt32();
             var dim = new int[rank];
             for (int i = 0; i < rank; i++)
@@ -185,151 +281,37 @@ namespace Serializer
             for (int i = 0; i < count; i++)
             {
                 ind = GetNewIndexes(rank, dim, ind, ref currDim);
-                var val = ReadPrimitiveOrStringType(stream, type);
+                var val = stream.ReadPrimitiveOrStringType(type);
                 arr.SetValue(val, ind);
             }
             return arr;
         }
 
-        private static object ReadPrimitiveOrStringType(MemoryStream stream, Type type)
+        private object ReadArrayOfByRef(Stream stream)
         {
-            if (type.Name == typeof(Byte).Name)
+            var rank = stream.ReadInt32();
+            var dim = new int[rank];
+            for (int i = 0; i < rank; i++)
             {
-                return stream.ReadByte();
+                dim[i] = stream.ReadInt32();
             }
-            else if (type.Name == typeof(Boolean).Name)
+            var arr = Array.CreateInstance(typeof(object), dim);
+            int currDim = 0;
+            int count = 1;
+            var ind = new int[rank];
+            for (int i = 0; i < rank; i++)
             {
-                return stream.ReadBool();
+                count *= dim[i];
             }
-            else if (type.Name == typeof(short).Name)
+            for (int i = 0; i < count; i++)
             {
-                return stream.ReadInt16();
+                ind = GetNewIndexes(rank, dim, ind, ref currDim);
+                object val;
+                val = this.Deserialize(stream);
+                arr.SetValue(val, ind);
             }
-            else if (type.Name == typeof(ushort).Name)
-            {
-                return stream.ReadUInt16();
-            }
-            else if (type.Name == typeof(int).Name)
-            {
-                return stream.ReadInt32();
-            }
-            else if (type.Name == typeof(uint).Name)
-            {
-                return stream.ReadUInt32();
-            }
-            else if (type.Name == typeof(long).Name)
-            {
-                return stream.ReadInt64();
-            }
-            else if (type.Name == typeof(ulong).Name)
-            {
-                return stream.ReadUInt64();
-            }
-            else if (type.Name == typeof(float).Name)
-            {
-                return stream.ReadFloat();
-            }
-            else if (type.Name == typeof(double).Name)
-            {
-                return stream.ReadDouble();
-            }
-            else if (type.Name == typeof(string).Name)
-            {
-                return stream.ReadString();
-            }
-            else return null;
+            return arr;
         }
 
-
-        private static void WritePrimitiveOrStringType(MemoryStream stream, object obj)
-        {
-            Type t = obj.GetType();
-
-            if (t.Name == typeof(Byte).Name)
-            {
-                stream.WriteByte((byte)obj);
-            }
-            else if (t.Name == typeof(Boolean).Name)
-            {
-                stream.WriteBool((bool)obj);
-            }
-            else if (t.Name == typeof(short).Name)
-            {
-                stream.WriteInt16((short)obj);
-            }
-            else if (t.Name == typeof(ushort).Name)
-            {
-                stream.WriteUInt16((ushort)obj);
-            }
-            else if (t.Name == typeof(int).Name)
-            {
-                stream.WriteInt32((int)obj);
-            }
-            else if (t.Name == typeof(uint).Name)
-            {
-                stream.WriteUInt32((uint)obj);
-            }
-            else if (t.Name == typeof(long).Name)
-            {
-                stream.WriteInt64((long)obj);
-            }
-            else if (t.Name == typeof(ulong).Name)
-            {
-                stream.WriteUInt64((ulong)obj);
-            }
-            else if (t.Name == typeof(float).Name)
-            {
-                stream.WriteFloat((float)obj);
-            }
-            else if (t.Name == typeof(double).Name)
-            {
-                stream.WriteDouble((double)obj);
-            }
-            else if (t.Name == typeof(string).Name)
-            {
-                stream.WriteStringWithLength((string)obj);
-            }
-
-
-        }
-        private static object ReadEnumType(MemoryStream stream)
-        {
-            var name = stream.ReadString();
-            SerializeTypeEnum ut = (SerializeTypeEnum)stream.ReadByte();
-            Type underType = _typeMap.FirstOrDefault(s => s.Value == ut).Key;
-            var len = stream.ReadInt32();
-            var names = new string[len];
-            for (int i = 0; i < len; i++)
-            {
-                names[i] = (string)ReadPrimitiveOrStringType(stream, typeof(String));
-            }
-            AppDomain currentDomain = AppDomain.CurrentDomain;
-            AssemblyName aName = new AssemblyName("TempAssembly");
-            AssemblyBuilder ab = currentDomain.DefineDynamicAssembly(aName, AssemblyBuilderAccess.RunAndSave);
-            ModuleBuilder mb = ab.DefineDynamicModule(aName.Name, aName.Name + ".dll");
-
-            EnumBuilder eb = mb.DefineEnum(name, TypeAttributes.Public, underType);
-            for (int i = 0; i < len; i++)
-            {
-                eb.DefineLiteral(names[i].ToString(), (byte)1);
-            }
-
-            Type finished = eb.CreateType();
-            ab.Save(aName.Name + ".dll");
-            return finished;
-        }
-
-        private static void WriteEnumType(Stream stream, Type t)
-        {
-            stream.WriteByte((byte)GetTypeEnum(t.BaseType));
-            stream.WriteStringWithLength(t.Name);
-            stream.WriteByte((byte)GetTypeEnum(t.GetEnumUnderlyingType()));
-            var names = t.GetEnumNames();
-            stream.WriteInt32(names.Length);
-            for (int i = 0; i < names.Length; i++)
-            {
-                stream.WriteStringWithLength(names[i]);
-            }
-        }
     }
 }
