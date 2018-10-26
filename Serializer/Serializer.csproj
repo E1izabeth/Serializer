@@ -42,12 +42,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayOfByRefInfo.cs" />
+    <Compile Include="CustomTypeInfo.cs" />
+    <Compile Include="NullInfo.cs" />
+    <Compile Include="PrimitiveTypeInfo.cs" />
+    <Compile Include="SerializeTypeInfo.cs" />
     <Compile Include="MySerializer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SerializeFieldInfo.cs" />
-    <Compile Include="SerializeTypeInfo.cs" />
+    <Compile Include="ArrayOfStructInfo.cs" />
+    <Compile Include="EnumInfo.cs" />
+    <Compile Include="SerializeTypes.cs" />
     <Compile Include="StreamExtensions.cs" />
+    <Compile Include="TypesVisitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

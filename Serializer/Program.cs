@@ -44,6 +44,13 @@ namespace Serializer
         }
     }
 
+    struct User
+    {
+        public string name;
+        public int age;
+        
+    }
+
     class Program
     {
 
@@ -52,28 +59,37 @@ namespace Serializer
             var serializer = new MySerializer();
             var stream = new MemoryStream();
 
+            User usr = new User();
+            usr.age = 18;
+            usr.name = "Tom";
+
             var lst = new List<object>();
-            //var apple = new Apple<int>(Colour.Green, 4);
+
+            var apple = new Apple(Colour.Green, 4);
             lst.Add(new int[,,] { { { 1, 2, 3 }, { 4, 5, 6 } }, { { 7, 8, 9 }, { 10, 11, 12 } } });
-           // lst.Add(apple);
+            lst.Add(apple);
             lst.Add(ConsoleColor.Yellow);
             lst.Add("abcd");
             lst.Add(4321);
 
-            //var x = new int[,,] { { { 1, 2, 3 }, { 4, 5, 6 } }, { { 7, 8, 9 }, { 10, 11, 12 } } };
-            //Apple[] apples = new Apple[2] { new Apple(Colour.Yellow, 9), new Apple(Colour.Red, 10) };
-            //var l = new List<Apple>();
-            //l.Add(new Apple(Colour.Yellow, 9));
-            //l.Add(new Apple(Colour.Green, 7));
-            //l.Add(new Apple(Colour.Yellow, 5));
-            //l.Add(new Apple(Colour.Red, 8));
-            //l.Add(new Apple(Colour.Yellow, 2));
+            var x = new int[,,] { { { 1, 2, 3 }, { 4, 5, 6 } }, { { 7, 8, 9 }, { 10, 11, 12 } } };
 
-            serializer.Serialize(lst, stream);
+            Apple[] apples = new Apple[2] { new Apple(Colour.Yellow, 9), new Apple(Colour.Red, 10) };
+
+            var l = new List<Apple>();
+            l.Add(new Apple(Colour.Yellow, 9));
+            l.Add(new Apple(Colour.Green, 7));
+            l.Add(new Apple(Colour.Yellow, 5));
+            l.Add(new Apple(Colour.Red, 8));
+            l.Add(new Apple(Colour.Yellow, 2));
+
+            Colour c = Colour.Yellow;
+            var d = 2424.655;
+            serializer.Serialize(l, stream);
             stream.Position = 0;
 
-            var str = Encoding.UTF8.GetString(stream.ToArray()).Replace('\0', '.');
-            Console.WriteLine(str);
+            //var str = Encoding.UTF8.GetString(stream.ToArray()).Replace('\0', '.');
+            //Console.WriteLine(str);
 
             var v = serializer.Deserialize(stream);
         }

@@ -78,49 +78,44 @@ namespace Serializer
             s.Read(temp, 0, count);
             return Encoding.UTF8.GetString(temp);
         }
-
-        public static void WriteNULL(this Stream s)
-        {
-            s.WriteStringWithLength("NULL");
-        }
-
+        
         public static void WriteInt32(this Stream s, int v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 4);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(Int32));
         }
 
         public static void WriteUInt32(this Stream s, uint v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 4);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(UInt32));
         }
 
         public static void WriteInt16(this Stream s, Int16 v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 2);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(Int16));
         }
         public static void WriteUInt16(this Stream s, UInt16 v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 2);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(UInt16));
         }
 
         public static void WriteInt64(this Stream s, Int64 v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 8);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(Int64));
         }
 
         public static void WriteUInt64(this Stream s, UInt64 v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 8);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(UInt64));
         }
 
         public static void WriteFloat(this Stream s, float v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 2);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(float));
         }
 
         public static void WriteDouble(this Stream s, double v)
         {
-            s.Write(BitConverter.GetBytes(v), 0, 4);
+            s.Write(BitConverter.GetBytes(v), 0, sizeof(double));
         }
 
         public static int WriteString(this Stream s, string str)
