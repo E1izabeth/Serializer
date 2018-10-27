@@ -85,7 +85,7 @@ namespace Serializer
 
             Colour c = Colour.Yellow;
             var d = 2424.655;
-            serializer.Serialize(l, stream);
+            serializer.Serialize(lst, stream);
             stream.Position = 0;
 
             //var str = Encoding.UTF8.GetString(stream.ToArray()).Replace('\0', '.');

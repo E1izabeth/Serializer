@@ -15,7 +15,8 @@ namespace Serializer
 {
     public class MySerializer
     {
-        
+        private List<SerializeTypeInfo> _serializedTypes;
+
         public void Serialize(object obj, Stream stream)
         {
             if (obj is null)
@@ -34,36 +35,15 @@ namespace Serializer
             object o = null;
             SerializeTypeEnum t = (SerializeTypeEnum)stream.ReadByte();
 
-            switch (t)
+            if (t is SerializeTypeEnum.Null)
             {
-                case SerializeTypeEnum.Null:
-                    {
-                        o = null;
-                    }
-                    break;
-                case SerializeTypeEnum.Byte:
-                case SerializeTypeEnum.Bool:
-                case SerializeTypeEnum.Int16:
-                case SerializeTypeEnum.Int32:
-                case SerializeTypeEnum.Int64:
-                case SerializeTypeEnum.UInt16:
-                case SerializeTypeEnum.UInt32:
-                case SerializeTypeEnum.UInt64:
-                case SerializeTypeEnum.Float:
-                case SerializeTypeEnum.Double:
-                case SerializeTypeEnum.String:
-                case SerializeTypeEnum.Enum:
-                case SerializeTypeEnum.ArrayOfStruct:
-                case SerializeTypeEnum.ArrayOfByref:
-                case SerializeTypeEnum.Custom:
-                    {
-                        var info = SerializeTypeInfo.GetTypeInfo(t);
-                        info.Read(stream);
-                        o = info.Get();
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException();
+                o = null;
+            }
+            else
+            {
+                var info = SerializeTypeInfo.GetTypeInfo(t);
+                info.Read(stream);
+                o = info.Get();
             }
 
             return o;
