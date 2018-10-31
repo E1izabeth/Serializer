@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Serializer
+namespace NewSerializer
 {
     public enum Colour
     {
@@ -36,11 +38,10 @@ namespace Serializer
 
     class Program
     {
-
         static void Main(string[] args)
         {
-            var serializer = new MySerializer();
             var stream = new MemoryStream();
+            var serializer = new MyBinarySerializer();
 
             var lst = new List<object>();
 
@@ -71,13 +72,15 @@ namespace Serializer
             var d = 2424.655;
 
 
+            var s1 = l.Collect();
+
             serializer.Serialize(l, stream);
             stream.Position = 0;
 
-            var r = serializer.Deserialize(stream);
+            var r = new MyBinarySerializer().Deserialize(stream);
+            var s2 = r.Collect();
 
-            //return;
-
+            Console.WriteLine();
         }
     }
 }

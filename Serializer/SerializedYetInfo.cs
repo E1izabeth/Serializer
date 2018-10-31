@@ -10,23 +10,29 @@ namespace Serializer
 {
     public class SerializedYetInfo : SerializeInstanceInfo
     {
+        public SerializedYetInfo(int index)
+            : base(null)
+        {
+            this.NumberInList = index;
+        }
+
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             //var info = instanceInfos.ElementAt(numberInList);
             //var o = info.Get(instanceInfos);
-            var o = instanceInfos[this.numberInList].Instance;
+            var o = instanceInfos[this.NumberInList].Instance;
             return o;
         }
 
         public override void Read(Stream stream)
         {
-            numberInList = stream.ReadInt32();
+            NumberInList = stream.ReadInt32();
         }
 
         public override void Write(Stream stream)
         {
             stream.WriteByte((byte)SerializeTypeEnum.SerializedYet);
-            stream.WriteInt32(numberInList);
+            stream.WriteInt32(NumberInList);
         }
     }
 }

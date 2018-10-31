@@ -11,7 +11,8 @@ namespace Serializer
         private int[] _dimensions;
         private object[] _values;
 
-        public ArrayOfPrimitivesInfo()
+        internal ArrayOfPrimitivesInfo(ISerializationContext ctx)
+            : base(ctx)
         {
 
         }
@@ -93,6 +94,7 @@ namespace Serializer
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             var arr = Array.CreateInstance(SerializeTypes.GetType(_elementType), _dimensions);
+            this.Instance = arr;
             int count = 1;
             var ind = new int[_rank];
             for (int i = 0; i < _rank; i++)

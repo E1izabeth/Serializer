@@ -12,7 +12,8 @@ namespace Serializer
         private List<ISerializeInstanceInfo> _elementsInfo;
         private Type _arrayType;
 
-        public ArrayOfByRefInfo()
+        internal ArrayOfByRefInfo(ISerializationContext ctx)
+            : base(ctx)
         {
 
         }
@@ -41,8 +42,8 @@ namespace Serializer
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             var objType = Assembly.Load(_arrayType.Assembly.FullName).GetType(_arrayType.FullName);
-            var o = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(objType);
-            var arr = Array.CreateInstance(o.GetType(), _dimensions);
+            var arr = Array.CreateInstance(objType, _dimensions);
+            this.Instance = arr;
             int currDim = 0;
             int count = 1;
             var ind = new int[_rank];
@@ -78,7 +79,7 @@ namespace Serializer
             for (int i = 0; i < count; i++)
             {
                 ind = MySerializer.GetNewArrayIndexes(_rank, _dimensions, ind, ref currDim);
-                var info = SerializeInstanceInfo.GetUninitializedTypeInfo((SerializeTypeEnum)stream.ReadByte());
+                var info = this.Context.GetUninitializedTypeInfo((SerializeTypeEnum)stream.ReadByte());
                 info.Read(stream);
                 _elementsInfo.Add(info);
             }

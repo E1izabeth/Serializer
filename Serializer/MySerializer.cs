@@ -11,7 +11,8 @@ namespace Serializer
         int KnownInstancesCount { get; }
 
         SerializeInstanceInfo GetInstanceInfo(object obj);
-        void RegisterInstanceInfo(ISerializeInstanceInfo obj);
+        int RegisterInstanceInfo(SerializeInstanceInfo obj);
+        SerializeInstanceInfo GetUninitializedTypeInfo(SerializeTypeEnum serializeTypeEnum);
     }
 
 
@@ -28,6 +29,8 @@ namespace Serializer
 
         public void Serialize(object obj, Stream stream)
         {
+            _serializedInstances.Clear();
+
             if (obj is null)
             {
                 stream.WriteByte((byte)SerializeTypeEnum.Null);
@@ -39,9 +42,11 @@ namespace Serializer
             }
         }
 
-        void ISerializationContext.RegisterInstanceInfo(ISerializeInstanceInfo obj)
+        int ISerializationContext.RegisterInstanceInfo(SerializeInstanceInfo obj)
         {
+            var id = _serializedInstances.Count;
             _serializedInstances.Add(obj);
+            return id;
         }
 
         SerializeInstanceInfo ISerializationContext.GetInstanceInfo(object obj)
@@ -50,7 +55,7 @@ namespace Serializer
 
             if (index >= 0)
             {
-                return new SerializedYetInfo() { numberInList = index };
+                return new SerializedYetInfo(index);
             }
             else
             {
@@ -98,6 +103,8 @@ namespace Serializer
 
         public object Deserialize(Stream stream)
         {
+            _serializedInstances.Clear();
+
             object o = null;
             SerializeTypeEnum t = (SerializeTypeEnum)stream.ReadByte();
 
@@ -107,7 +114,7 @@ namespace Serializer
             }
             else
             {
-                var info = SerializeInstanceInfo.GetUninitializedTypeInfo(t);
+                var info = this.GetUninitializedTypeInfo(t);
                 info.Read(stream);
                 o = info.Get(_serializedInstances);
             }
@@ -151,6 +158,60 @@ namespace Serializer
                 currDim = 0;
             }
             return indexes;
+        }
+
+        SerializeInstanceInfo ISerializationContext.GetUninitializedTypeInfo(SerializeTypeEnum type) { return this.GetUninitializedTypeInfo(type); }
+
+        private SerializeInstanceInfo GetUninitializedTypeInfo(SerializeTypeEnum type)
+        {
+            SerializeInstanceInfo info = null;
+            switch (type)
+            {
+                case SerializeTypeEnum.Null:
+                case SerializeTypeEnum.Byte:
+                case SerializeTypeEnum.Bool:
+                case SerializeTypeEnum.Int16:
+                case SerializeTypeEnum.Int32:
+                case SerializeTypeEnum.Int64:
+                case SerializeTypeEnum.UInt16:
+                case SerializeTypeEnum.UInt32:
+                case SerializeTypeEnum.UInt64:
+                case SerializeTypeEnum.Float:
+                case SerializeTypeEnum.Double:
+                case SerializeTypeEnum.String:
+                    {
+                        info = new PrimitiveTypeInfo(type, this);
+                    }
+                    break;
+                case SerializeTypeEnum.Enum:
+                    {
+                        info = new EnumInfo();
+                    }
+                    break;
+                case SerializeTypeEnum.ArrayOfPrimitives:
+                    {
+                        info = new ArrayOfPrimitivesInfo(this);
+                    }
+                    break;
+                case SerializeTypeEnum.ArrayOfByref:
+                    {
+                        info = new ArrayOfByRefInfo(this);
+                    }
+                    break;
+                case SerializeTypeEnum.Custom:
+                    {
+                        info = new CustomInfo(this);
+                    }
+                    break;
+                case SerializeTypeEnum.SerializedYet:
+                    {
+                        info = new SerializedYetInfo(-1);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return info;
         }
     }
 }

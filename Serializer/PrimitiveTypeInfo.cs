@@ -12,7 +12,8 @@ namespace Serializer
         Type _type;
         private object _value;
 
-        public PrimitiveTypeInfo(SerializeTypeEnum type)
+        internal PrimitiveTypeInfo(SerializeTypeEnum type, ISerializationContext ctx)
+            : base(ctx)
         {
             _type = SerializeTypes.GetType(type);
         }
@@ -26,6 +27,7 @@ namespace Serializer
 
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
+            this.Instance = _value;
             return _value;
         }
 

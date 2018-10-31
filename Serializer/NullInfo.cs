@@ -10,6 +10,10 @@ namespace Serializer
 {
     public class NullInfo : SerializeInstanceInfo
     {
+        public NullInfo()
+            : base(null)
+        {
+        }
 
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {

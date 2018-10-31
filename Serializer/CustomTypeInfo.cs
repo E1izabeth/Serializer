@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace Serializer
 {
@@ -12,7 +13,8 @@ namespace Serializer
         private string _fullName;
         private List<SerializeInstanceInfo> _fieldsInfo;
 
-        public CustomInfo()
+        internal CustomInfo(ISerializationContext ctx)
+            : base(ctx)
         {
 
         }
@@ -37,10 +39,10 @@ namespace Serializer
 
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
-            object o = null;
             var objType = Assembly.Load(_assemblyName).GetType(_fullName);
-            o = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(objType);
-            var fields = o.GetType().GetFields(BindingFlags.Public | BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+            var o = FormatterServices.GetUninitializedObject(objType);
+            var fields = objType.GetFields(BindingFlags.Public | BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+            this.Instance = o;
             int j = 0;
             foreach (var f in fields)
             {
@@ -59,7 +61,7 @@ namespace Serializer
             _fieldsInfo = new List<SerializeInstanceInfo>(count);
             for (int i = 0; i < count; i++)
             {
-                var info = GetUninitializedTypeInfo((SerializeTypeEnum)stream.ReadByte());
+                var info = this.Context.GetUninitializedTypeInfo((SerializeTypeEnum)stream.ReadByte());
                 info.Read(stream);
                 _fieldsInfo.Add(info);
             }
@@ -67,13 +69,13 @@ namespace Serializer
 
         public override void Write(Stream stream)
         {
-            if (numberInList != 0)
-            {
-                stream.WriteByte((byte)SerializeTypeEnum.SerializedYet);
-                stream.WritePrimitiveOrStringType(numberInList);
-            }
-            else
-            {
+            //if (numberInList != 0)
+            //{
+            //    stream.WriteByte((byte)SerializeTypeEnum.SerializedYet);
+            //    stream.WritePrimitiveOrStringType(numberInList);
+            //}
+            //else
+            //{
                 stream.WriteByte((byte)SerializeTypeEnum.Custom);
                 stream.WritePrimitiveOrStringType(_assemblyName);
                 stream.WritePrimitiveOrStringType(_fullName);
@@ -89,7 +91,7 @@ namespace Serializer
                         f.Write(stream);
                     }
                 }
-            }
+            //}
         }
     }
 }

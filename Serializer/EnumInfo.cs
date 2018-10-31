@@ -17,11 +17,13 @@ namespace Serializer
         private Type _enumType = null;
 
         public EnumInfo()
+            : base(null)
         {
 
         }
 
         public EnumInfo(object obj)
+            : base(null)
         {
             var t = obj.GetType();
             _assemblyName = t.Assembly.FullName;
