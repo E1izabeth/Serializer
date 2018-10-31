@@ -38,11 +38,6 @@ namespace Serializer
             }
         }
 
-        public override ISerializeInstanceInfo Apply(ITypesVisitor visitor, object obj)
-        {
-            return visitor.GetArrayOfByRefInfo(obj);
-        }
-
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             var objType = Assembly.Load(_arrayType.Assembly.FullName).GetType(_arrayType.FullName);

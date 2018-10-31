@@ -24,11 +24,6 @@ namespace Serializer
             _value = value;
         }
 
-        public override ISerializeInstanceInfo Apply(ITypesVisitor visitor, object obj)
-        {
-            throw new NotImplementedException();
-        }
-
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             return _value;

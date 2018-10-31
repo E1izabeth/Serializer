@@ -35,11 +35,6 @@ namespace Serializer
             }
         }
 
-        public override ISerializeInstanceInfo Apply(ITypesVisitor visitor, object obj)
-        {
-            return visitor.GetCustomTypeInfo(obj);
-        }
-
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             object o = null;

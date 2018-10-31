@@ -55,7 +55,6 @@
     <Compile Include="EnumInfo.cs" />
     <Compile Include="SerializeTypes.cs" />
     <Compile Include="StreamExtensions.cs" />
-    <Compile Include="TypesVisitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -50,10 +50,5 @@ namespace Serializer
             var o = Enum.ToObject(_enumType, _value);
             return o;
         }
-
-        public override ISerializeInstanceInfo Apply(ITypesVisitor visitor, object obj)
-        {
-            return visitor.GetEnumInfo(obj);
-        }
     }
 }
