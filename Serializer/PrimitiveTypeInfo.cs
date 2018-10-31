@@ -7,28 +7,29 @@ using System.Threading.Tasks;
 
 namespace Serializer
 {
-    public class PrimitiveTypeInfo : SerializeTypeInfo
+    public class PrimitiveTypeInfo : SerializeInstanceInfo
     {
         Type _type;
         private object _value;
 
-        public PrimitiveTypeInfo(SerializeTypes.SerializeTypeEnum type)
+        public PrimitiveTypeInfo(SerializeTypeEnum type)
         {
             _type = SerializeTypes.GetType(type);
         }
 
-        public PrimitiveTypeInfo(object value)
+        internal PrimitiveTypeInfo(object value, ISerializationContext ctx)
+            : base(value, ctx)
         {
             _type = value.GetType();
             _value = value;
         }
 
-        public override ISerializeTypeInfo Apply(ITypesVisitor visitor, object obj)
+        public override ISerializeInstanceInfo Apply(ITypesVisitor visitor, object obj)
         {
             throw new NotImplementedException();
         }
 
-        public override object Get()
+        public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             return _value;
         }

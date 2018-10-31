@@ -8,14 +8,14 @@ using static Serializer.SerializeTypes;
 
 namespace Serializer
 {
-    public class NullInfo : SerializeTypeInfo
+    public class NullInfo : SerializeInstanceInfo
     {
-        public override ISerializeTypeInfo Apply(ITypesVisitor visitor, object obj)
+        public override ISerializeInstanceInfo Apply(ITypesVisitor visitor, object obj)
         {
             throw new NotImplementedException();
         }
 
-        public override object Get()
+        public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             return null;
         }

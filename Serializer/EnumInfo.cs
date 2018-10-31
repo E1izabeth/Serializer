@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Serializer
 {
-    public class EnumInfo : SerializeTypeInfo
+    public class EnumInfo : SerializeInstanceInfo
     {
         private string _assemblyName;
         private string _fullName;
@@ -31,7 +31,7 @@ namespace Serializer
 
         public override void Write(Stream stream)
         {
-            stream.WriteByte((byte)SerializeTypes.SerializeTypeEnum.Enum);
+            stream.WriteByte((byte)SerializeTypeEnum.Enum);
             stream.WritePrimitiveOrStringType(_assemblyName);
             stream.WritePrimitiveOrStringType(_fullName);
             stream.WritePrimitiveOrStringType((object)_value);
@@ -45,13 +45,13 @@ namespace Serializer
             _value = stream.ReadPrimitiveOrStringType(_enumType.GetEnumUnderlyingType());
         }
 
-        public override object Get()
+        public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
             var o = Enum.ToObject(_enumType, _value);
             return o;
         }
 
-        public override ISerializeTypeInfo Apply(ITypesVisitor visitor, object obj)
+        public override ISerializeInstanceInfo Apply(ITypesVisitor visitor, object obj)
         {
             return visitor.GetEnumInfo(obj);
         }

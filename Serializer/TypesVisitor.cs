@@ -9,31 +9,31 @@ namespace Serializer
     public interface ITypesVisitor
     {
         EnumInfo GetEnumInfo(object obj);
-        ArrayOfStructInfo GetArrayOfStructInfo(object obj);
+        ArrayOfPrimitivesInfo GetArrayOfStructInfo(object obj);
         ArrayOfByRefInfo GetArrayOfByRefInfo(object obj);
-        CustomTypeInfo GetCustomTypeInfo(object obj);
+        CustomInfo GetCustomTypeInfo(object obj);
     }
 
-    public class TypesVisitor : ITypesVisitor
-    {
-        public ArrayOfByRefInfo GetArrayOfByRefInfo(object obj)
-        {
-            return new ArrayOfByRefInfo(obj);
-        }
+    //public class TypesVisitor : ITypesVisitor
+    //{
+    //    public ArrayOfByRefInfo GetArrayOfByRefInfo(object obj)
+    //    {
+    //        return new ArrayOfByRefInfo(obj);
+    //    }
 
-        public ArrayOfStructInfo GetArrayOfStructInfo(object obj)
-        {
-            return new ArrayOfStructInfo(obj);
-        }
+    //    public ArrayOfStructInfo GetArrayOfStructInfo(object obj)
+    //    {
+    //        return new ArrayOfStructInfo(obj);
+    //    }
 
-        public CustomTypeInfo GetCustomTypeInfo(object obj)
-        {
-            return new CustomTypeInfo(obj);
-        }
+    //    public CustomTypeInfo GetCustomTypeInfo(object obj)
+    //    {
+    //        return new CustomTypeInfo(obj);
+    //    }
 
-        public EnumInfo GetEnumInfo(object obj)
-        {
-            return new EnumInfo(obj);
-        }
-    }
+    //    public EnumInfo GetEnumInfo(object obj)
+    //    {
+    //        return new EnumInfo(obj);
+    //    }
+    //}
 }

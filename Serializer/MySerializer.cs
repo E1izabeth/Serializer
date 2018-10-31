@@ -2,20 +2,29 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting;
-using System.Text;
-using System.Threading.Tasks;
 using static Serializer.SerializeTypes;
 
 namespace Serializer
 {
-    public class MySerializer
+    interface ISerializationContext
     {
-        private List<SerializeTypeInfo> _serializedTypes;
+        int KnownInstancesCount { get; }
+
+        SerializeInstanceInfo GetInstanceInfo(object obj);
+        void RegisterInstanceInfo(ISerializeInstanceInfo obj);
+    }
+
+
+    public class MySerializer : ISerializationContext
+    {
+        private List<ISerializeInstanceInfo> _serializedInstances;
+
+        int ISerializationContext.KnownInstancesCount { get { return _serializedInstances.Count; } }
+
+        public MySerializer()
+        {
+            _serializedInstances = new List<ISerializeInstanceInfo>();
+        }
 
         public void Serialize(object obj, Stream stream)
         {
@@ -25,9 +34,66 @@ namespace Serializer
             }
             else
             {
-                var info = SerializeTypeInfo.GetTypeInfo(obj);
+                var info = this.GetInstanceInfo(obj);
                 info.Write(stream);
             }
+        }
+
+        void ISerializationContext.RegisterInstanceInfo(ISerializeInstanceInfo obj)
+        {
+            _serializedInstances.Add(obj);
+        }
+
+        SerializeInstanceInfo ISerializationContext.GetInstanceInfo(object obj)
+        {
+            var index = _serializedInstances.FindIndex(t => t.Instance == obj);
+
+            if (index >= 0)
+            {
+                return new SerializedYetInfo() { numberInList = index };
+            }
+            else
+            {
+                return this.GetInstanceInfo(obj);
+            }
+        }
+
+        private SerializeInstanceInfo GetInstanceInfo(object obj)
+        {
+            if (obj is null)
+                return null;
+
+            var t = obj.GetType();
+            SerializeInstanceInfo info;
+
+            if (t.IsPrimitive || t == typeof(string))
+            {
+                info = new PrimitiveTypeInfo(obj, this);
+            }
+            else if (t.IsEnum)
+            {
+                info = new EnumInfo(obj);
+            }
+            else if (t.IsArray)
+            {
+                var arr = obj as Array;
+
+                if (SerializeTypes.GetTypeEnum(t.GetElementType()) != SerializeTypeEnum.Custom)
+                {
+                    info = new ArrayOfPrimitivesInfo(arr, this);
+                }
+                else
+                {
+                    info = new ArrayOfByRefInfo(arr, this);
+                }
+            }
+            else
+            {
+                info = new CustomInfo(obj, this);
+            }
+
+            // _serializedInstances.Add(info);
+            return info;
         }
 
         public object Deserialize(Stream stream)
@@ -41,9 +107,9 @@ namespace Serializer
             }
             else
             {
-                var info = SerializeTypeInfo.GetTypeInfo(t);
+                var info = SerializeInstanceInfo.GetUninitializedTypeInfo(t);
                 info.Read(stream);
-                o = info.Get();
+                o = info.Get(_serializedInstances);
             }
 
             return o;
@@ -86,6 +152,5 @@ namespace Serializer
             }
             return indexes;
         }
-
     }
 }

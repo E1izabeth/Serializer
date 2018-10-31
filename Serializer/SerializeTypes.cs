@@ -7,27 +7,30 @@ using System.Threading.Tasks;
 
 namespace Serializer
 {
+    public enum SerializeTypeEnum : byte
+    {
+        Null = 0,
+        Byte = 1,
+        Bool = 2,
+        Int16 = 3,
+        Int32 = 4,
+        Int64 = 5,
+        UInt16 = 6,
+        UInt32 = 7,
+        UInt64 = 8,
+        Float = 9,
+        Double = 10,
+        String = 11,
+        Enum = 12,
+        ArrayOfPrimitives = 13,
+        ArrayOfByref = 14,
+        Custom = 15,
+        SerializedYet = 16
+    }
+
     public static class SerializeTypes
     {
-        public enum SerializeTypeEnum : byte
-        {
-            Null = 0,
-            Byte = 1,
-            Bool = 2,
-            Int16 = 3,
-            Int32 = 4,
-            Int64 = 5,
-            UInt16 = 6,
-            UInt32 = 7,
-            UInt64 = 8,
-            Float = 9,
-            Double = 10,
-            String = 11,
-            Enum = 12,
-            ArrayOfStruct = 13,
-            ArrayOfByref = 14,
-            Custom = 15
-        }
+
 
         private static Dictionary<Type, SerializeTypeEnum> _typeMap = new Dictionary<Type, SerializeTypeEnum>{
             { typeof(byte), SerializeTypeEnum.Byte},
