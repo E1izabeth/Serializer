@@ -155,9 +155,11 @@ namespace NewSerializer
 
                     if (t.IsArray && t.GetArrayRank() > 1)
                     { // multidimensional arrays
-                        throw new NotImplementedException("");
+                        //throw new NotImplementedException("");
+                        t = enumerable.ToArray().GetType();
                     }
-                    else if (ifs.Contains("System.Collections.IDictionary") || ifs.Contains("System.Collections.Generic.IDictionary`2"))
+
+                    if (ifs.Contains("System.Collections.IDictionary") || ifs.Contains("System.Collections.Generic.IDictionary`2"))
                     { // dictionary
                         var cnt = (t.GetProperty("Length") ?? t.GetProperty("Count")).GetValue(obj, null);
 
