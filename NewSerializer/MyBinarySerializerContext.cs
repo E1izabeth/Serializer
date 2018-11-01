@@ -29,6 +29,9 @@ namespace NewSerializer
             Array,
             Custom,
 
+            Type = 0xee,
+
+            TypeRef = 0xfe,
             Ref = 0xff
         }
 
@@ -66,6 +69,5 @@ namespace NewSerializer
                 }
             );
         }
-
     }
 }

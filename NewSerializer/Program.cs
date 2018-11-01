@@ -77,7 +77,7 @@ namespace NewSerializer
 
             serializer.Serialize(lst, stream);
 
-            File.WriteAllBytes(@"e:\test.bin", stream.ToArray());
+            //File.WriteAllBytes(@"e:\test.bin", stream.ToArray());
 
             stream.Position = 0;
 
@@ -87,8 +87,8 @@ namespace NewSerializer
             Console.WriteLine(s1);
             Console.WriteLine(s1 == s2);
 
-            File.WriteAllText(@"e:\s1.txt", s1);
-            File.WriteAllText(@"e:\s2.txt", s2);
+            //File.WriteAllText(@"e:\s1.txt", s1);
+            //File.WriteAllText(@"e:\s2.txt", s2);
         }
     }
 }

@@ -12,6 +12,7 @@ namespace NewSerializer
     {
         private readonly StreamBinaryReader _reader;
         private readonly List<object> _objById = new List<object>();
+        private readonly List<Type> _typeById = new List<Type>();
 
         public MyBinarySerializerReader(StreamBinaryReader reader)
         {
@@ -20,33 +21,49 @@ namespace NewSerializer
 
         private void RegisterReadInstance(object obj)
         {
-            _objById.Add(obj);
+            if (obj is Type t)
+            {
+                _typeById.Add(t);
+            }
+            else
+            {
+                _objById.Add(obj);
+            }
         }
 
-        private T ReadInstance<T>()
+        private T ReadInstance<T>(bool withCache = true)
         {
-            return (T)this.ReadInstance(typeof(T));
+            return (T)this.ReadInstance(typeof(T), withCache);
         }
 
         private Type ReadTypeSignature()
         {
-            var assemblyFullName = this.ReadInstance<string>();
+            var isGeneric = _reader.ReadBoolean();
+            Type type;
 
-            var typeNameParts = this.ReadInstance<string[]>();
-            var namespaceName = this.ReadInstance<string>();
-            var typeFullName = namespaceName + "." + string.Join("+", typeNameParts);
-
-            var asm = Assembly.Load(assemblyFullName);
-            var type = asm.GetType(typeFullName);
-
-            if (type.IsGenericTypeDefinition)
+            if (isGeneric)
             {
-                var args = type.GetGenericArguments().Select(a => this.ReadTypeSignature()).ToArray();
-                type = type.MakeGenericType(args);
+                var args = this.ReadInstance<Type[]>(false);
+                var def = this.ReadInstance<Type>();
+                type = def.MakeGenericType(args);
+            }
+            else
+            {
+                var assemblyFullName = this.ReadInstance<string>();
+                var namespaceName = this.ReadInstance<string>();
+                var typeNameParts = this.ReadInstance<string[]>();
+                var typeFullName = namespaceName + "." + string.Join("+", typeNameParts);
+
+                var asm = Assembly.Load(assemblyFullName);
+                type = asm.GetType(typeFullName);
             }
 
+            Console.WriteLine($"reading {type}");
+            this.RegisterReadInstance(type);
             return type;
         }
+
+        int _n = 0;
 
         public object ReadInstance(Type type = null, bool withCache = true)
         {
@@ -61,11 +78,16 @@ namespace NewSerializer
                     kind = writerInfo.Item1;
                 else if (type == typeof(string))
                     kind = TypeKind.String;
+                else if (type == typeof(Type))
+                    kind = TypeKind.Type;
                 else if (type.IsArray)
                     kind = TypeKind.Array;
                 else
                     kind = TypeKind.Custom;
             }
+
+            Console.WriteLine((++_n) + ": reading " + kind + " " + (type == null ? "" : type.FullName));
+            var n = _n;
 
             object obj;
 
@@ -95,17 +117,30 @@ namespace NewSerializer
                 case TypeKind.String:
                     {
                         obj = _reader.ReadString();
-                        this.RegisterReadInstance(obj);
+
+                        if (withCache)
+                            this.RegisterReadInstance(obj);
+                    }
+                    break;
+                case TypeKind.Type:
+                    {
+                        obj = this.ReadTypeSignature();
                     }
                     break;
                 case TypeKind.Array:
                     {
-                        obj = this.ReadArrayInstanceImpl(type);
+                        obj = this.ReadArrayInstanceImpl(type, withCache);
                     }
                     break;
                 case TypeKind.Custom:
                     {
-                        obj = this.ReadCustomTypeInstanceImpl(type);
+                        obj = this.ReadCustomTypeInstanceImpl(type, withCache);
+                    }
+                    break;
+                case TypeKind.TypeRef:
+                    {
+                        var id = _reader.ReadInt32();
+                        obj = _typeById[id];
                     }
                     break;
                 case TypeKind.Ref:
@@ -118,10 +153,12 @@ namespace NewSerializer
                     throw new InvalidOperationException();
             }
 
+            Console.WriteLine("\t" + n + ": " + (obj == null ? "<NULL>" : obj.GetType().FullName) + " " + (obj == null || obj.ToString() == obj.GetType().ToString() ? "" : obj.ToString()));
+
             return obj;
         }
 
-        private object ReadArrayInstanceImpl(Type type)
+        private object ReadArrayInstanceImpl(Type type, bool withCache)
         {
             object obj;
             Type elementType;
@@ -129,7 +166,7 @@ namespace NewSerializer
 
             if (type == null)
             {
-                elementType = this.ReadTypeSignature();
+                elementType = this.ReadInstance<Type>();
                 rank = _reader.ReadInt32();
             }
             else
@@ -142,7 +179,8 @@ namespace NewSerializer
             var arr = Array.CreateInstance(elementType, dimensions);
 
             obj = arr;
-            this.RegisterReadInstance(obj);
+            if (withCache)
+                this.RegisterReadInstance(obj);
 
             var indexes = new int[dimensions.Length];
             for (int i = 0; i < arr.Length; i++)
@@ -162,12 +200,12 @@ namespace NewSerializer
             return obj;
         }
 
-        private object ReadCustomTypeInstanceImpl(Type type)
+        private object ReadCustomTypeInstanceImpl(Type type, bool withCache)
         {
             object obj;
             if (type == null)
             {
-                type = this.ReadTypeSignature();
+                type = this.ReadInstance<Type>();
             }
 
             if (type.IsEnum)
@@ -180,7 +218,8 @@ namespace NewSerializer
             else
             {
                 obj = FormatterServices.GetUninitializedObject(type);
-                this.RegisterReadInstance(obj);
+                if (withCache)
+                    this.RegisterReadInstance(obj);
 
                 type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                     .ForEach(f => f.SetValue(obj, this.ReadInstance()));
