@@ -163,10 +163,11 @@ namespace NewSerializer
                     { // dictionary
                         var cnt = (t.GetProperty("Length") ?? t.GetProperty("Count")).GetValue(obj, null);
 
-                        if (cnt is int && (int)cnt != 0)
-                            throw new NotImplementedException("");
-
                         ret += " Count = " + cnt.ToString() + " { " + Environment.NewLine;
+                        ret += string.Join("," + Environment.NewLine,
+                                    enumerable.Select(el => "\t" + Collect(null, () => el, el.GetType().Name, depth - 1, traced, showTypes, (el.GetType().Equals(t)) ? (stdepth + 1) : (0), except))
+                                              .Select(fd => fd.Replace(Environment.NewLine, Environment.NewLine + "\t"))
+                                          );
                         ret += Environment.NewLine + "}";
                     }
                     else if (ifs.Contains("System.Collections.IList") || ifs.Contains("System.Collections.Generic.IList`1"))

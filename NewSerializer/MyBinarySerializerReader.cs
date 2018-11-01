@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace NewSerializer
 {
-    class MyBinarySerializerReader : MyBinarySerializerContext
+    internal class MyBinarySerializerReader : MyBinarySerializerContext
     {
-        readonly StreamBinaryReader _reader;
-        readonly List<object> _objById = new List<object>();
+        private readonly StreamBinaryReader _reader;
+        private readonly List<object> _objById = new List<object>();
 
         public MyBinarySerializerReader(StreamBinaryReader reader)
         {
@@ -31,10 +31,19 @@ namespace NewSerializer
         private Type ReadTypeSignature()
         {
             var assemblyFullName = this.ReadInstance<string>();
-            var typeFullName = this.ReadInstance<string>();
+
+            var typeNameParts = this.ReadInstance<string[]>();
+            var namespaceName = this.ReadInstance<string>();
+            var typeFullName = namespaceName + "." + string.Join("+", typeNameParts);
 
             var asm = Assembly.Load(assemblyFullName);
             var type = asm.GetType(typeFullName);
+
+            if (type.IsGenericTypeDefinition)
+            {
+                var args = type.GetGenericArguments().Select(a => this.ReadTypeSignature()).ToArray();
+                type = type.MakeGenericType(args);
+            }
 
             return type;
         }
@@ -115,23 +124,22 @@ namespace NewSerializer
         private object ReadArrayInstanceImpl(Type type)
         {
             object obj;
-            Array arr;
-            int[] dimensions;
+            Type elementType;
+            int rank;
 
             if (type == null)
             {
-                var rank = _reader.ReadInt32();
-                dimensions = Enumerable.Range(0, rank).Select(n => _reader.ReadInt32()).ToArray();
-
-                var elementType = this.ReadTypeSignature();
-
-                arr = Array.CreateInstance(elementType, dimensions);
+                elementType = this.ReadTypeSignature();
+                rank = _reader.ReadInt32();
             }
             else
             {
-                arr = (Array)Activator.CreateInstance(type);
-                dimensions = Enumerable.Range(0, arr.Rank).Select(n => arr.GetLength(n)).ToArray();
+                elementType = type.GetElementType();
+                rank = type.GetArrayRank();
             }
+
+            var dimensions = Enumerable.Range(0, rank).Select(n => _reader.ReadInt32()).ToArray();
+            var arr = Array.CreateInstance(elementType, dimensions);
 
             obj = arr;
             this.RegisterReadInstance(obj);
@@ -141,7 +149,7 @@ namespace NewSerializer
             {
                 arr.SetValue(this.ReadInstance(), indexes);
 
-                for (int j = 0; j < dimensions.Length; j++)
+                for (int j = dimensions.Length - 1; j >= 0; j--)
                 {
                     indexes[j]++;
                     if (indexes[j] < dimensions[j])
@@ -167,11 +175,11 @@ namespace NewSerializer
                 var underlyingType = type.GetEnumUnderlyingType();
                 var primitiveReader = _primitiveReaders[_primitiveWriters[underlyingType].Item1];
                 var rawValue = primitiveReader(_reader);
-                obj = Enum.ToObject((Type)type, rawValue);
+                obj = Enum.ToObject(type, rawValue);
             }
             else
             {
-                obj = FormatterServices.GetUninitializedObject((Type)type);
+                obj = FormatterServices.GetUninitializedObject(type);
                 this.RegisterReadInstance(obj);
 
                 type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)

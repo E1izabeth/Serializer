@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 
 namespace NewSerializer
 {
-    class MyBinarySerializerWriter : MyBinarySerializerContext
+    internal class MyBinarySerializerWriter : MyBinarySerializerContext
     {
-        readonly Dictionary<object, int> _idByObj = new Dictionary<object, int>();
-
-        readonly StreamBinaryWriter _writer;
+        private readonly Dictionary<object, int> _idByObj = new Dictionary<object, int>();
+        private readonly StreamBinaryWriter _writer;
 
         public MyBinarySerializerWriter(StreamBinaryWriter writer)
         {
@@ -25,8 +24,30 @@ namespace NewSerializer
 
         private void WriteTypeSignature(Type type)
         {
-            this.WriteInstance(type.Assembly.FullName, false);
-            this.WriteInstance(type.FullName, false);
+            if (type.IsGenericType && !type.IsGenericTypeDefinition)
+            {
+                var def = type.GetGenericTypeDefinition();
+                this.WriteTypeSignature(def);
+
+                var args = type.GetGenericArguments();
+                args.ForEach(a => this.WriteTypeSignature(a));
+            }
+            else
+            {
+                this.WriteInstance(type.Assembly.FullName, false);
+
+                var parts = new List<string>();
+                parts.Add(type.Name);
+
+                while (type.IsNested)
+                {
+                    type = type.DeclaringType;
+                    parts.Add(type.Name);
+                }
+
+                this.WriteInstance(parts.AsEnumerable().Reverse().ToArray(), false);
+                this.WriteInstance(type.Namespace, false);
+            }
         }
 
         public void WriteInstance(object obj, bool withTypeInfo = true, bool withCache = true)
@@ -116,14 +137,14 @@ namespace NewSerializer
 
                 if (withTypeInfo)
                 {
-                    _writer.WriteInt32(arr.Rank);
-                    Enumerable.Range(0, arr.Rank).ForEach(n => _writer.WriteInt32(arr.GetLength(n)));
                     this.WriteTypeSignature(t.GetElementType());
+                    _writer.WriteInt32(arr.Rank);
                 }
             }
 
             this.RegisterWrittenInstance(obj);
 
+            Enumerable.Range(0, arr.Rank).ForEach(n => _writer.WriteInt32(arr.GetLength(n)));
             arr.OfType<object>().ForEach(o => this.WriteInstance(o));
         }
 
