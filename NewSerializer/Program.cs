@@ -45,12 +45,12 @@ namespace NewSerializer
 
             var lst = new List<object>();
 
-            //var apple = new Apple<int>(Colour.Green, 4);
-            //lst.Add(new int[,,] { { { 1, 2, 3 }, { 4, 5, 6 } }, { { 7, 8, 9 }, { 10, 11, 12 } } });
-            //lst.Add(apple);
-            //lst.Add(ConsoleColor.Yellow);
-            //lst.Add("abcd");
-            //lst.Add(4321);
+            var apple = new Apple(Colour.Green, 4);
+            lst.Add(new int[,,] { { { 1, 2, 3 }, { 4, 5, 6 } }, { { 7, 8, 9 }, { 10, 11, 12 } } });
+            lst.Add(apple);
+            lst.Add(ConsoleColor.Yellow);
+            lst.Add("abcd");
+            lst.Add(4321);
 
             var x = new int[,,] { { { 1, 2, 3 }, { 4, 5, 6 } }, { { 7, 8, 9 }, { 10, 11, 12 } } };
 
@@ -67,20 +67,28 @@ namespace NewSerializer
             var n3 = l.AddBefore(n2, app2);
             var n4 = l.AddAfter(n3, app4);
             var n5 = l.AddAfter(n4, app5);
-
+            lst.Add(new Dictionary<string, Apple>() { { "x", app3 }, { "y", app4 }, { "z", app5 } });
+            lst.Add(l);
             Colour c = Colour.Yellow;
             var d = 2424.655;
 
 
-            var s1 = l.Collect();
+            var s1 = lst.Collect();
 
-            serializer.Serialize(l, stream);
+            serializer.Serialize(lst, stream);
+
+            File.WriteAllBytes(@"e:\test.bin", stream.ToArray());
+
             stream.Position = 0;
 
             var r = new MyBinarySerializer().Deserialize(stream);
             var s2 = r.Collect();
 
-            Console.WriteLine();
+            Console.WriteLine(s1);
+            Console.WriteLine(s1 == s2);
+
+            File.WriteAllText(@"e:\s1.txt", s1);
+            File.WriteAllText(@"e:\s2.txt", s2);
         }
     }
 }

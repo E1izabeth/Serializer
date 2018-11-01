@@ -155,16 +155,19 @@ namespace NewSerializer
 
                     if (t.IsArray && t.GetArrayRank() > 1)
                     { // multidimensional arrays
-                        throw new NotImplementedException("");
+                        //throw new NotImplementedException("");
+                        t = enumerable.ToArray().GetType();
                     }
-                    else if (ifs.Contains("System.Collections.IDictionary") || ifs.Contains("System.Collections.Generic.IDictionary`2"))
+
+                    if (ifs.Contains("System.Collections.IDictionary") || ifs.Contains("System.Collections.Generic.IDictionary`2"))
                     { // dictionary
                         var cnt = (t.GetProperty("Length") ?? t.GetProperty("Count")).GetValue(obj, null);
 
-                        if (cnt is int && (int)cnt != 0)
-                            throw new NotImplementedException("");
-
                         ret += " Count = " + cnt.ToString() + " { " + Environment.NewLine;
+                        ret += string.Join("," + Environment.NewLine,
+                                    enumerable.Select(el => "\t" + Collect(null, () => el, el.GetType().Name, depth - 1, traced, showTypes, (el.GetType().Equals(t)) ? (stdepth + 1) : (0), except))
+                                              .Select(fd => fd.Replace(Environment.NewLine, Environment.NewLine + "\t"))
+                                          );
                         ret += Environment.NewLine + "}";
                     }
                     else if (ifs.Contains("System.Collections.IList") || ifs.Contains("System.Collections.Generic.IList`1"))
