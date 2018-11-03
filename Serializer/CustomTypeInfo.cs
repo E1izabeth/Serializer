@@ -69,29 +69,21 @@ namespace Serializer
 
         public override void Write(Stream stream)
         {
-            //if (numberInList != 0)
-            //{
-            //    stream.WriteByte((byte)SerializeTypeEnum.SerializedYet);
-            //    stream.WritePrimitiveOrStringType(numberInList);
-            //}
-            //else
-            //{
-                stream.WriteByte((byte)SerializeTypeEnum.Custom);
-                stream.WritePrimitiveOrStringType(_assemblyName);
-                stream.WritePrimitiveOrStringType(_fullName);
-                stream.WriteInt32(_fieldsInfo.Count);
-                foreach (var f in _fieldsInfo)
+            stream.WriteByte((byte)SerializeTypeEnum.Custom);
+            stream.WritePrimitiveOrStringType(_assemblyName);
+            stream.WritePrimitiveOrStringType(_fullName);
+            stream.WriteInt32(_fieldsInfo.Count);
+            foreach (var f in _fieldsInfo)
+            {
+                if (f is null)
                 {
-                    if (f is null)
-                    {
-                        (new NullInfo()).Write(stream);
-                    }
-                    else
-                    {
-                        f.Write(stream);
-                    }
+                    (new NullInfo()).Write(stream);
                 }
-            //}
+                else
+                {
+                    f.Write(stream);
+                }
+            }
         }
     }
 }

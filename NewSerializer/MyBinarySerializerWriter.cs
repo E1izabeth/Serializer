@@ -71,8 +71,8 @@ namespace NewSerializer
 
         public void WriteInstance(object obj, bool withTypeInfo = true, bool withCache = true)
         {
-            Type t = obj == null ? null : obj.GetType();
-            Console.WriteLine("writing " + (obj == null ? "<NULL>" : obj.GetType().FullName) + " " + (obj == null || obj.ToString() == obj.GetType().ToString() ? "" : obj.ToString()));
+            Type t = obj?.GetType();
+            // Console.WriteLine("writing " + (obj == null ? "<NULL>" : obj.GetType().FullName) + " " + (obj == null || obj.ToString() == obj.GetType().ToString() ? "" : obj.ToString()));
 
             int id;
             if (obj != null && withCache && (_idByObj.TryGetValue(obj, out id) || (obj is Type type && _idByType.TryGetValue(type, out id))))
@@ -123,18 +123,18 @@ namespace NewSerializer
                         break;
                     case Enum value:
                         {
-                            this.WriteEnumInstanceImpl(obj, withTypeInfo, withCache, t);
+                            this.WriteEnumInstanceImpl(obj, withTypeInfo, withCache);
                         }
                         break;
                     case Array arr:
                         {
-                            this.WriteArrayInstanceImpl(obj, withTypeInfo, withCache, t, arr);
+                            this.WriteArrayInstanceImpl(arr, withTypeInfo, withCache);
                         }
                         break;
                     case ValueType value:
                     default:
                         {
-                            this.WriteCustomTypeInstanceImpl(obj, withTypeInfo, withCache, t);
+                            this.WriteCustomTypeInstanceImpl(obj, withTypeInfo, withCache);
                         }
                         break;
 
@@ -142,8 +142,10 @@ namespace NewSerializer
             }
         }
 
-        private void WriteEnumInstanceImpl(object obj, bool withTypeInfo, bool withCache, Type t)
+        private void WriteEnumInstanceImpl(object obj, bool withTypeInfo, bool withCache)
         {
+            var t = obj.GetType();
+
             if (withTypeInfo || withCache)
             {
                 _writer.WriteByte((byte)TypeKind.Custom);
@@ -159,28 +161,33 @@ namespace NewSerializer
             primitiveWriter(_writer, rawValue);
         }
 
-        private void WriteArrayInstanceImpl(object obj, bool withTypeInfo, bool withCache, Type t, Array arr)
+        private void WriteArrayInstanceImpl(Array arr, bool withTypeInfo, bool withCache)
         {
+            var t = arr.GetType();
+            var elementType = t.GetElementType();
+
             if (withTypeInfo || withCache)
             {
                 _writer.WriteByte((byte)TypeKind.Array);
 
                 if (withTypeInfo)
                 {
-                    this.WriteInstance(t.GetElementType(), false);
+                    this.WriteInstance(elementType, false);
                     _writer.WriteInt32(arr.Rank);
                 }
             }
 
             if (withCache)
-                this.RegisterWrittenInstance(obj);
+                this.RegisterWrittenInstance(arr);
 
             Enumerable.Range(0, arr.Rank).ForEach(n => _writer.WriteInt32(arr.GetLength(n)));
-            arr.OfType<object>().ForEach(o => this.WriteInstance(o));
+            arr.OfType<object>().ForEach(o => this.WriteInstance(o, this.IsTypeInfoRequired(elementType), this.CanBeCached(elementType)));
         }
 
-        private void WriteCustomTypeInstanceImpl(object obj, bool withTypeInfo, bool withCache, Type t)
+        private void WriteCustomTypeInstanceImpl(object obj, bool withTypeInfo, bool withCache)
         {
+            var t = obj.GetType();
+
             if (withTypeInfo || withCache)
             {
                 _writer.WriteByte((byte)TypeKind.Custom);
@@ -193,7 +200,7 @@ namespace NewSerializer
                 this.RegisterWrittenInstance(obj);
 
             t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-             .ForEach(f => this.WriteInstance(f.GetValue(obj)));
+             .ForEach(f => this.WriteInstance(f.GetValue(obj), this.IsTypeInfoRequired(f.FieldType), this.CanBeCached(f.FieldType)));
         }
     }
 }

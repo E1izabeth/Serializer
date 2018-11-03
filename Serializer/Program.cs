@@ -14,7 +14,7 @@ namespace Serializer
 
     public class Apple
     {
-        private int taste;
+        private int _taste;
         public Colour Colour { get; set; }
 
         public object x;
@@ -22,7 +22,7 @@ namespace Serializer
         public Apple(Colour colour, int taste)
         {
             this.Colour = colour;
-            this.taste = taste;
+            this._taste = taste;
             x = this;
         }
 
@@ -30,7 +30,7 @@ namespace Serializer
 
         public Apple()
         {
-            taste = --_cnt;
+            _taste = --_cnt;
         }
     }
 
@@ -75,8 +75,6 @@ namespace Serializer
             stream.Position = 0;
 
             var r = serializer.Deserialize(stream);
-
-            //return;
 
         }
     }

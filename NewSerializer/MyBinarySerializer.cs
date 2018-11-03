@@ -11,6 +11,10 @@ namespace NewSerializer
 {
     class MyBinarySerializer
     {
+        string _lastLog;
+
+        public string LastLog { get { return _lastLog; } }
+
         public MyBinarySerializer()
         {
         }
@@ -29,6 +33,7 @@ namespace NewSerializer
             var reader = new StreamBinaryReader(stream, false, true);
             var ctx = new MyBinarySerializerReader(reader);
             var obj = ctx.ReadInstance();
+            _lastLog = ctx.GetDebugLog();
             return obj;
         }
 

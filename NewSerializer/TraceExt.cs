@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -174,7 +175,8 @@ namespace NewSerializer
                     { // plain indexable enumerable
                         ret += " Count = " + (t.GetProperty("Length") ?? t.GetProperty("Count")).GetValue(obj, null) + " { " + Environment.NewLine;
                         ret += string.Join("," + Environment.NewLine,
-                            enumerable.Select((el, n) => "\t(" + n + ") " + Collect(null, () => el, el.GetType().Name, depth - 1, traced, showTypes, (el.GetType().Equals(t)) ? (stdepth + 1) : (0), except))
+                            enumerable.Select(o => o == null ? FormatterServices.GetUninitializedObject(typeof(void)) : o)
+                                      .Select((el, n) => "\t(" + n + ") " + Collect(null, () => el, el.GetType().Name, depth - 1, traced, showTypes, (el.GetType().Equals(t)) ? (stdepth + 1) : (0), except))
                                               .Select(fd => fd.Replace(Environment.NewLine, Environment.NewLine + "\t"))
                                           );
                         ret += Environment.NewLine + "}";
@@ -304,7 +306,6 @@ namespace NewSerializer
 
                 return false;
             }
-
         }
     }
 }

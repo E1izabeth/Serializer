@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NewSerializer
@@ -40,6 +41,18 @@ namespace NewSerializer
     {
         static void Main(string[] args)
         {
+            //var y = new Counter();
+
+            //var arr = new I1[] { y, y, y, y, y, y, y, y };
+
+            //arr[0].Inc();
+            //arr[1].Inc();
+            //arr[2].Inc();
+            //arr[3].Inc();
+
+
+            //return;
+
             var stream = new MemoryStream();
             var serializer = new MyBinarySerializer();
 
@@ -69,6 +82,7 @@ namespace NewSerializer
             var n5 = l.AddAfter(n4, app5);
             lst.Add(new Dictionary<string, Apple>() { { "x", app3 }, { "y", app4 }, { "z", app5 } });
             lst.Add(l);
+            lst.Add(null);
             Colour c = Colour.Yellow;
             var d = 2424.655;
 
@@ -77,18 +91,72 @@ namespace NewSerializer
 
             serializer.Serialize(lst, stream);
 
-            //File.WriteAllBytes(@"e:\test.bin", stream.ToArray());
+            WriteFile(@"test.bin", stream.ToArray());
 
             stream.Position = 0;
 
-            var r = new MyBinarySerializer().Deserialize(stream);
+            var deserializer = new MyBinarySerializer();
+            var r = deserializer.Deserialize(stream);
             var s2 = r.Collect();
 
             Console.WriteLine(s1);
+            Console.WriteLine(s2);
             Console.WriteLine(s1 == s2);
 
-            //File.WriteAllText(@"e:\s1.txt", s1);
-            //File.WriteAllText(@"e:\s2.txt", s2);
+            WriteFile(@"reader-log.txt", deserializer.LastLog);
+
+            // WriteFile(@"s1.txt", s1);
+            // WriteFile(@"s2.txt", s2);
+        }
+
+        static void WriteFile(string filename, string text)
+        {
+            DeleteFile(filename);
+            File.WriteAllText(filename, text);
+        }
+
+        static void WriteFile(string filename, byte[] data)
+        {
+            DeleteFile(filename);
+            File.WriteAllBytes(filename, data);
+        }
+
+        static void DeleteFile(string filename)
+        {
+            for (int i = 0; i < 3 && File.Exists(filename); i++)
+            {
+                try
+                {
+                    File.Delete(filename);
+                }
+                catch
+                {
+                    Thread.Sleep(500);
+                }
+            }
+
+            if (File.Exists(filename))
+                File.Delete(filename);
+        }
+    }
+
+    interface I1
+    {
+        void Inc();
+    }
+
+    struct Counter : I1
+    {
+        public int value;
+
+        public void Inc()
+        {
+            this.value++;
+        }
+
+        public override string ToString()
+        {
+            return "Counter: " + this.value;
         }
     }
 }
