@@ -74,8 +74,6 @@ namespace NewSerializer
 
         protected bool IsTypeInfoRequired(Type locationType)
         {
-            return true;
-
             if (locationType == null)
                 return true;
 
@@ -90,8 +88,6 @@ namespace NewSerializer
 
         protected bool CanBeCached(Type locationType)
         {
-            return true;
-
             if (locationType == null)
                 return true;
 

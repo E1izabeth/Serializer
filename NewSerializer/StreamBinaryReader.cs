@@ -44,14 +44,20 @@ namespace NewSerializer
 
         public byte ReadByte()
         {
-            _stream.Read(_buffer, 0, 1);
+            var read = _stream.Read(_buffer, 0, 1);
+            if (read < 1)
+                throw new InvalidOperationException();
+
             return _buffer.UnpackUInt8(0);
         }
 
         public byte[] ReadBytes(int count)
         {
             var arr = new byte[count];
-            _stream.Read(arr, 0, arr.Length);
+            var read = _stream.Read(arr, 0, arr.Length);
+            if (read < count)
+                throw new InvalidOperationException();
+
             return arr;
         }
 
@@ -77,7 +83,10 @@ namespace NewSerializer
 
         public short ReadInt16()
         {
-            _stream.Read(_buffer, 0, 2);
+            var read = _stream.Read(_buffer, 0, 2);
+            if (read < 2)
+                throw new InvalidOperationException();
+
             return _buffer.UnpackInt16(0);
         }
 
@@ -89,14 +98,20 @@ namespace NewSerializer
             }
             else
             {
-                _stream.Read(_buffer, 0, 4);
+                var read = _stream.Read(_buffer, 0, 4);
+                if (read < 4)
+                    throw new InvalidOperationException();
+
                 return _buffer.UnpackInt32(0);
             }
         }
 
         public long ReadInt64()
         {
-            _stream.Read(_buffer, 0, 8);
+            var read = _stream.Read(_buffer, 0, 8);
+            if (read < 8)
+                throw new InvalidOperationException();
+
             return _buffer.UnpackInt64(0);
         }
 
@@ -117,19 +132,28 @@ namespace NewSerializer
 
         public ushort ReadUInt16()
         {
-            _stream.Read(_buffer, 0, 2);
+            var read = _stream.Read(_buffer, 0, 2);
+            if (read < 2)
+                throw new InvalidOperationException();
+
             return _buffer.UnpackUInt16(0);
         }
 
         public uint ReadUInt32()
         {
-            _stream.Read(_buffer, 0, 4);
+            var read = _stream.Read(_buffer, 0, 4);
+            if (read < 4)
+                throw new InvalidOperationException();
+
             return _buffer.UnpackUInt32(0);
         }
 
         public ulong ReadUInt64()
         {
-            _stream.Read(_buffer, 0, 8);
+            var read = _stream.Read(_buffer, 0, 8);
+            if (read < 8)
+                throw new InvalidOperationException();
+
             return _buffer.UnpackUInt64(0);
         }
 
