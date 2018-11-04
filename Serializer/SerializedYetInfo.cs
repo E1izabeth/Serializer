@@ -18,21 +18,19 @@ namespace Serializer
 
         public override object Get(List<ISerializeInstanceInfo> instanceInfos)
         {
-            //var info = instanceInfos.ElementAt(numberInList);
-            //var o = info.Get(instanceInfos);
             var o = instanceInfos[this.NumberInList].Instance;
             return o;
         }
 
         public override void Read(Stream stream)
         {
-            NumberInList = stream.ReadInt32();
+            this.NumberInList = stream.ReadInt32();
         }
 
         public override void Write(Stream stream)
         {
             stream.WriteByte((byte)SerializeTypeEnum.SerializedYet);
-            stream.WriteInt32(NumberInList);
+            stream.WriteInt32(this.NumberInList);
         }
     }
 }

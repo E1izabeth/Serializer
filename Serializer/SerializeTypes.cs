@@ -11,29 +11,31 @@ namespace Serializer
     {
         Null = 0,
         Byte = 1,
-        Bool = 2,
-        Int16 = 3,
-        Int32 = 4,
-        Int64 = 5,
-        UInt16 = 6,
-        UInt32 = 7,
-        UInt64 = 8,
-        Float = 9,
-        Double = 10,
-        String = 11,
-        Enum = 12,
-        ArrayOfPrimitives = 13,
-        ArrayOfByref = 14,
-        Custom = 15,
-        SerializedYet = 16
+        SByte = 2,
+        Char = 3,
+        Bool = 4,
+        Int16 = 5,
+        Int32 = 6,
+        Int64 = 7,
+        UInt16 = 8,
+        UInt32 = 9,
+        UInt64 = 10,
+        Float = 11,
+        Double = 12,
+        String = 13,
+        Enum = 14,
+        ArrayOfPrimitives = 15,
+        ArrayOfByref = 16,
+        Custom = 17,
+        SerializedYet = 18
     }
 
     public static class SerializeTypes
     {
-
-
         private static Dictionary<Type, SerializeTypeEnum> _typeMap = new Dictionary<Type, SerializeTypeEnum>{
             { typeof(byte), SerializeTypeEnum.Byte},
+            { typeof(sbyte), SerializeTypeEnum.SByte},
+            { typeof(char), SerializeTypeEnum.Char},
             { typeof(bool), SerializeTypeEnum.Bool},
             { typeof(Int16), SerializeTypeEnum.Int16},
             { typeof(Int32), SerializeTypeEnum.Int32},

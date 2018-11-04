@@ -29,6 +29,9 @@ namespace NewSerializer
             Array,
             Custom,
 
+            Type = 0xee,
+
+            TypeRef = 0xfe,
             Ref = 0xff
         }
 
@@ -53,19 +56,50 @@ namespace NewSerializer
 
         static MyBinarySerializerContext()
         {
-            _primitiveWriters = _primitiveTypes.ToDictionary(t => t, t => {
+            _primitiveWriters = _primitiveTypes.ToDictionary(t => t, t =>
+            {
                 Func<object, object[], object> writeMethod = typeof(StreamBinaryWriter).GetMethod("Write" + t.Name).Invoke;
                 return (t.Name.ParseEnum<TypeKind>(), new Action<StreamBinaryWriter, object>((w, v) => writeMethod(w, new[] { v })));
             });
 
             _primitiveReaders = _primitiveTypes.ToDictionary(
                 t => t.Name.ParseEnum<TypeKind>(),
-                t => {
+                t =>
+                {
                     Func<object, object[], object> readMethod = typeof(StreamBinaryReader).GetMethod("Read" + t.Name).Invoke;
                     return new Func<StreamBinaryReader, object>(r => readMethod(r, new object[0]));
                 }
             );
         }
 
+        protected bool IsTypeInfoRequired(Type locationType)
+        {
+            return true;
+
+            if (locationType == null)
+                return true;
+
+            var notRequired = locationType.IsValueType
+                || locationType.IsPrimitive
+                || locationType.IsEnum
+                || (locationType.IsArray && this.IsTypeInfoRequired(locationType.GetElementType()))
+                || (locationType.IsClass && locationType.IsSealed);
+
+            return !notRequired;
+        }
+
+        protected bool CanBeCached(Type locationType)
+        {
+            return true;
+
+            if (locationType == null)
+                return true;
+
+            var cannotBeReferenced = locationType.IsValueType
+                || locationType.IsPrimitive
+                || locationType.IsEnum;
+
+            return !cannotBeReferenced;
+        }
     }
 }
