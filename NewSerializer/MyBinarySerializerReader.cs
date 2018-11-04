@@ -194,7 +194,7 @@ namespace NewSerializer
                     break;
                 case TypeKind.TypeRef:
                     {
-                        using (this.LogBytes("type ref: ", () => obj))
+                        using (this.LogBytes("type ref: {0}", () => obj))
                         {
                             var id = _reader.ReadInt32();
                             obj = _typeById[id];
@@ -203,7 +203,7 @@ namespace NewSerializer
                     break;
                 case TypeKind.Ref:
                     {
-                        using (this.LogBytes("instance ref: ", () => obj))
+                        using (this.LogBytes("instance ref: {0}", () => obj))
                         {
                             var id = _reader.ReadInt32();
                             obj = _objById[id];
