@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NewSerializer
+namespace NewSerializer 
 {
     public enum Colour
     {
@@ -82,7 +82,7 @@ namespace NewSerializer
             var n5 = l.AddAfter(n4, app5);
             lst.Add(new Dictionary<string, Apple>() { { "x", app3 }, { "y", app4 }, { "z", app5 } });
             lst.Add(l);
-            lst.Add(null);
+            // lst.Add(null);
             Colour c = Colour.Yellow;
             var d = 2424.655;
 

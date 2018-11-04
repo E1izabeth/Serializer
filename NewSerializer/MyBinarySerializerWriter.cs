@@ -181,7 +181,7 @@ namespace NewSerializer
                 this.RegisterWrittenInstance(arr);
 
             Enumerable.Range(0, arr.Rank).ForEach(n => _writer.WriteInt32(arr.GetLength(n)));
-            arr.OfType<object>().ForEach(o => this.WriteInstance(o, this.IsTypeInfoRequired(elementType), this.CanBeCached(elementType)));
+            arr.AsGenericEnumerable().ForEach(o => this.WriteInstance(o, this.IsTypeInfoRequired(elementType), this.CanBeCached(elementType)));
         }
 
         private void WriteCustomTypeInstanceImpl(object obj, bool withTypeInfo, bool withCache)
