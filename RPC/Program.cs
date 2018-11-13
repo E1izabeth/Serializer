@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using MyRpc;
+using MyRpc.Impl;
 using MyRpc.Model;
 
 namespace RPC
