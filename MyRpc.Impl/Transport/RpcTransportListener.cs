@@ -35,7 +35,7 @@ namespace MyRpc.Impl.Transport
         public void Dispose()
         {
             _acceptAsyncArgs.Dispose();
-            _listenSocket.Close(); //кажется, по правилам хорошего тона, это должно происходить примерно там же, где создаётся
+            _listenSocket.Close(); 
         }
 
         public void Start()
@@ -54,7 +54,7 @@ namespace MyRpc.Impl.Transport
         {
             if (e.SocketError == SocketError.Success)
             {
-                //TODO: do smth
+                //TODO: do smth (but what?)
             }
             e.AcceptSocket = null;
             this.AcceptAsync(_acceptAsyncArgs);

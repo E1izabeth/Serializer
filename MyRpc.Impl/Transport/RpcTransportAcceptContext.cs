@@ -12,7 +12,6 @@ namespace MyRpc.Impl.Transport
     public class RpcTransportAcceptContext : IRpcTransportAcceptContext<IPEndPoint, byte[]>
     {
         public IPEndPoint RemoteEndPoint { get; }
-
         private Socket _socket;
 
         public RpcTransportAcceptContext(Socket socket)

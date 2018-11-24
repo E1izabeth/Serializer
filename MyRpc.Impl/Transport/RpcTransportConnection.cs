@@ -1,6 +1,7 @@
 ﻿using MyRpc.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -12,50 +13,58 @@ namespace MyRpc.Impl.Transport
     class RpcTransportConnection : IRpcTransportConnection<IPEndPoint, byte[]>
     {
         public IPEndPoint RemoteEndPoint { get; }
-        private SocketAsyncEventArgs _scktAsyncEventArgs;
+
         public event Action OnClosed;
-        private byte[] _buff;
-        readonly Socket _sck;
+
+        readonly Socket _socket;
+        readonly NetworkStream _stream;
 
         public RpcTransportConnection(Socket sck)
         {
-            _sck = sck;
+            _socket = sck;
+            _stream = new NetworkStream(sck);
+
             this.RemoteEndPoint = (IPEndPoint)sck.RemoteEndPoint;
-            _scktAsyncEventArgs = new SocketAsyncEventArgs();
-            _scktAsyncEventArgs.Completed += this.SockAsyncEventArgs_Completed; 
         }
 
         public void Dispose()
         {
-            _sck.Close();
-            _sck.Dispose();
+            _socket.Close();
+            _stream.Dispose();
         }
 
         public void ReceivePacketAsync(Action<byte[]> onPacket)
         {
-            if(this.ReceiveAsync(_scktAsyncEventArgs))
-                onPacket(_scktAsyncEventArgs.Buffer);
+            var len = 0;
+            byte[] buff = null;
+            _stream.BeginRead(buff, 0, 4, ac1 => {
+                _stream.EndRead(ac1);
+
+                _stream.BeginRead(buff, 0, len, ac2 =>{
+                    _stream.EndWrite(ac2);
+
+                    onPacket(buff);
+                }, null);
+            }, null);
         }
 
         public void SendPacketAsync(byte[] packet, Action onSent)
         {
-            _scktAsyncEventArgs.SetBuffer(packet, 0, packet.Length);
-            _sck.SendAsync(_scktAsyncEventArgs);
+            _stream.BeginWrite(BitConverter.GetBytes(packet.Length), 0, 4, ar1 => {
+                _stream.EndWrite(ar1);
+
+                _stream.BeginWrite(packet, 0, packet.Length, ar2 => {
+                    _stream.EndWrite(ar2);
+
+                    onSent();
+                }, null);
+            }, null);
         }
 
         public void Start()
         {
-            _sck.Connect(this.RemoteEndPoint);
+            _socket.Connect(this.RemoteEndPoint);
         }
-
-        private void SockAsyncEventArgs_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            this.ReceiveAsync(e);
-        }
-
-        private bool ReceiveAsync(SocketAsyncEventArgs e)
-        {
-           return _sck.ReceiveAsync(e);
-        }
+        
     }
 }

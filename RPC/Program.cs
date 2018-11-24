@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MyRpc;
 using MyRpc.Impl;
@@ -34,8 +36,8 @@ namespace RPC
 
     class Program
     {
-        static readonly IRpcProtocol<IPEndPoint, byte[], object> _binaryTcpProtocol = Rpc.TcpTransport.MakeProtocol(Rpc.BinarySerializer);
-        static readonly IRpcServiceHost<object, IChatService> _host = Rpc.GenericHost.Helper().ForService<IChatService>();
+        static readonly IRpcProtocol<IPEndPoint, byte[], object> _binaryTcpProtocol = null; // Rpc.TcpTransport.MakeProtocol(Rpc.BinarySerializer);
+        static readonly IRpcServiceHost<object, IChatService> _host = null;// Rpc.GenericHost.Helper().ForService<IChatService>();
 
         static void DoServer()
         {

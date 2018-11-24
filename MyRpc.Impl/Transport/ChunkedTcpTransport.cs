@@ -20,6 +20,7 @@ namespace MyRpc.Impl.Transport
         //TODO: how can I take socket from remoteEndPoint the other way? I'm really need it?..
         IRpcTransportConnection<IPEndPoint, byte[]> IRpcTransport<IPEndPoint, byte[]>.CreateConnection(IPEndPoint remoteEndPoint)
         {
+            
             throw new NotImplementedException();
         }
 
