@@ -17,6 +17,7 @@ namespace MyRpc.Model
 
     public interface IRpcTransportConnection<TEndPoint, TPacket> : IDisposable
     {
+        event Action<Exception> OnError;
         event Action OnClosed;
 
         TEndPoint RemoteEndPoint { get; }
@@ -29,6 +30,8 @@ namespace MyRpc.Model
 
     public interface IRpcTransportListener<TEndPoint, TPacket> : IDisposable
     {
+        event Action<Exception> OnError;
+
         TEndPoint LocalEndPoint { get; }
 
         void Start();

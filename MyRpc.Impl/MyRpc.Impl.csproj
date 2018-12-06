@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinarySerializerImpl\MyBinarySerializerFabric.cs" />
     <Compile Include="Channel\RpcChannel.cs" />
     <Compile Include="Channel\RpcChannelAcceptContext.cs" />
     <Compile Include="Channel\RpcChannelListener.cs" />

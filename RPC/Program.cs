@@ -36,8 +36,8 @@ namespace RPC
 
     class Program
     {
-        static readonly IRpcProtocol<IPEndPoint, byte[], object> _binaryTcpProtocol = null; // Rpc.TcpTransport.MakeProtocol(Rpc.BinarySerializer);
-        static readonly IRpcServiceHost<object, IChatService> _host = null;// Rpc.GenericHost.Helper().ForService<IChatService>();
+        static readonly IRpcProtocol<IPEndPoint, byte[], object> _binaryTcpProtocol = Rpc.TcpTransport.MakeProtocol(Rpc.BinarySerializer);
+        static readonly IRpcServiceHost<object, IChatService> _host = Rpc.GenericHost.Helper().ForService<IChatService>();
 
         static void DoServer()
         {

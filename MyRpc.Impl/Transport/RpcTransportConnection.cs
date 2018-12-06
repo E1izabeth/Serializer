@@ -12,9 +12,11 @@ namespace MyRpc.Impl.Transport
 {
     class RpcTransportConnection : IRpcTransportConnection<IPEndPoint, byte[]>
     {
+        public event Action<Exception> OnError = delegate { };
+
         public IPEndPoint RemoteEndPoint { get; }
 
-        public event Action OnClosed;
+        public event Action OnClosed = delegate { };
 
         readonly Socket _socket;
         readonly NetworkStream _stream;
@@ -37,10 +39,12 @@ namespace MyRpc.Impl.Transport
         {
             var len = 0;
             byte[] buff = null;
-            _stream.BeginRead(buff, 0, 4, ac1 => {
+            _stream.BeginRead(buff, 0, 4, ac1 =>
+            {
                 _stream.EndRead(ac1);
 
-                _stream.BeginRead(buff, 0, len, ac2 =>{
+                _stream.BeginRead(buff, 0, len, ac2 =>
+                {
                     _stream.EndWrite(ac2);
 
                     onPacket(buff);
@@ -50,10 +54,12 @@ namespace MyRpc.Impl.Transport
 
         public void SendPacketAsync(byte[] packet, Action onSent)
         {
-            _stream.BeginWrite(BitConverter.GetBytes(packet.Length), 0, 4, ar1 => {
+            _stream.BeginWrite(BitConverter.GetBytes(packet.Length), 0, 4, ar1 =>
+            {
                 _stream.EndWrite(ar1);
 
-                _stream.BeginWrite(packet, 0, packet.Length, ar2 => {
+                _stream.BeginWrite(packet, 0, packet.Length, ar2 =>
+                {
                     _stream.EndWrite(ar2);
 
                     onSent();
@@ -65,6 +71,6 @@ namespace MyRpc.Impl.Transport
         {
             _socket.Connect(this.RemoteEndPoint);
         }
-        
+
     }
 }

@@ -14,7 +14,7 @@ namespace MyRpc
     {
         public static IRpcTransport<IPEndPoint, byte[]> TcpTransport { get => ChunkedTcpTransport.Instance; }
 
-        public static IRpcSerializerFabric<object, byte[]> BinarySerializer { get => throw new NotImplementedException(); }
+        public static IRpcSerializerFabric<object, byte[]> BinarySerializer { get; private set; } = new Impl.BinarySerializerImpl.MyBinarySerializerFabric();
 
         public static IRpcHost<object> GenericHost { get => throw new NotImplementedException(); }
 
