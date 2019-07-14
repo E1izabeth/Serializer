@@ -24,8 +24,6 @@ namespace MyRpc.Model
 
         void SendPacketAsync(TPacket packet, Action onSent);
         void ReceivePacketAsync(Action<TPacket> onPacket);
-
-        void Start();
     }
 
     public interface IRpcTransportListener<TEndPoint, TPacket> : IDisposable
@@ -115,4 +113,9 @@ namespace MyRpc.Model
     }
 
     #endregion
+
+    public interface IRemoteObject
+    {
+
+    }
 }

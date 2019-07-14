@@ -31,8 +31,8 @@ namespace NewSerializer
                 _idByObj.Add(obj, _idByObj.Count);
             }
 
-            File.WriteAllLines(@"t1.txt", _idByObj.Select(kv => $"{kv.Value}: {kv.Key}"));
-            File.WriteAllLines(@"t1t.txt", _idByType.Select(kv => $"{kv.Value}: {kv.Key}"));
+            //File.WriteAllLines(@"t1.txt", _idByObj.Select(kv => $"{kv.Value}: {kv.Key}"));
+            //File.WriteAllLines(@"t1t.txt", _idByType.Select(kv => $"{kv.Value}: {kv.Key}"));
         }
 
         private void WriteTypeSignature(Type type)

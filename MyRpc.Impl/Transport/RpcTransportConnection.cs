@@ -24,9 +24,9 @@ namespace MyRpc.Impl.Transport
         public RpcTransportConnection(Socket sck)
         {
             _socket = sck;
-            _stream = new NetworkStream(sck);
+            _stream = new NetworkStream(_socket);
 
-            this.RemoteEndPoint = (IPEndPoint)sck.RemoteEndPoint;
+            this.RemoteEndPoint = (IPEndPoint)_socket.RemoteEndPoint;
         }
 
         public void Dispose()
@@ -66,11 +66,7 @@ namespace MyRpc.Impl.Transport
                 }, null);
             }, null);
         }
-
-        public void Start()
-        {
-            _socket.Connect(this.RemoteEndPoint);
-        }
+        
 
     }
 }

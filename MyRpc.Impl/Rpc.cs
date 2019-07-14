@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using MyRpc.Impl;
+using MyRpc.Impl.Channel;
 using MyRpc.Impl.Transport;
 using MyRpc.Model;
 
@@ -16,7 +17,7 @@ namespace MyRpc
 
         public static IRpcSerializerFabric<object, byte[]> BinarySerializer { get; private set; } = new Impl.BinarySerializerImpl.MyBinarySerializerFabric();
 
-        public static IRpcHost<object> GenericHost { get => throw new NotImplementedException(); }
+        public static IRpcHost<object> GenericHost { get; private set; } = new GenericRpcHost();
 
         protected class GenericProtocol<TEndPoint, TPacket, TMessage> : IRpcProtocol<TEndPoint, TPacket, TMessage>
         {

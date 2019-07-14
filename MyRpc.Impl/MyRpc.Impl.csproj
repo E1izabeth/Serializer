@@ -42,11 +42,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinarySerializerImpl\MyBinarySerializerFabric.cs" />
-    <Compile Include="Channel\RpcChannel.cs" />
-    <Compile Include="Channel\RpcChannelAcceptContext.cs" />
-    <Compile Include="Channel\RpcChannelListener.cs" />
-    <Compile Include="Channel\RpcHost.cs" />
-    <Compile Include="Channel\RpcProtocol.cs" />
+    <Compile Include="Channel\GenericRpcChannel.cs" />
+    <Compile Include="Channel\GenericRpcChannelListener.cs" />
+    <Compile Include="Channel\GenericRpcHost.cs" />
+    <Compile Include="Channel\GenericRpcProtocol.cs" />
     <Compile Include="GenericServiceHost.cs" />
     <Compile Include="HostHelper.cs" />
     <Compile Include="Interfaces.cs" />

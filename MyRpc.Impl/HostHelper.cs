@@ -21,4 +21,17 @@ namespace MyRpc.Impl
             return new GenericServiceHost<TMessage, TService>(this.Host);
         }
     }
+
+    [Serializable]
+    internal sealed class ObjInfo
+    {
+        internal Int64 Id { get; private set; }
+        internal string[] IfaceNames { get; private set; }
+
+        public ObjInfo(long id, string[] ifaceNames)
+        {
+            this.Id = id;
+            this.IfaceNames = ifaceNames;
+        }
+    }
 }

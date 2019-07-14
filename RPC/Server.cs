@@ -27,6 +27,12 @@ namespace RPC
         {
             _svc.Unregister(_session);
         }
+
+        public string Ping()
+        {
+            Console.WriteLine("pongpong");
+            return "pong";
+        }
     }
 
     class ChatSession : IChatSession

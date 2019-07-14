@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,6 +15,7 @@ namespace RPC
 {
     public interface IChatService
     {
+        string Ping();
         IChatSession Login(string username, IMessageHandler handler);
     }
 
@@ -41,6 +43,8 @@ namespace RPC
 
         static void DoServer()
         {
+            Console.WriteLine("\nServer mode");
+            Console.WriteLine("----------------------------");
             var svc = new ChatServiceImpl();
 
             var activeSessions = new LinkedList<IRpcChannel<IChatService>>();
@@ -48,7 +52,6 @@ namespace RPC
             using (var listener = _host.Listen(_binaryTcpProtocol, new IPEndPoint(IPAddress.Any, 12345)))
             {
                 listener.Start();
-
 
                 Action<IRpcChannelAcceptContext<IPEndPoint, IChatService>> acceptHandler = null;
                 acceptHandler = ctx =>
@@ -69,6 +72,8 @@ namespace RPC
                         activeSessions.AddLast(channel);
                     }
 
+                    channel.Start();
+
                     listener.AcceptChannelAsync(acceptHandler);
                 };
 
@@ -80,9 +85,26 @@ namespace RPC
 
         static void DoClient()
         {
+            Console.WriteLine("\nClient mode");
+            Console.WriteLine("---------------------------------");
             using (var cnn = _host.Connect(_binaryTcpProtocol, new IPEndPoint(IPAddress.Loopback, 12345)))
             {
+                Console.WriteLine("Login in progress");
+
+                var sw = new Stopwatch();
+                for (int i = 0; i < 20; i++)
+                {
+                    sw.Start();
+                    Console.WriteLine(cnn.Service.Ping());
+                    sw.Stop();
+                    Console.WriteLine(i);
+                }
+                Console.WriteLine(new TimeSpan(sw.ElapsedTicks / 20));
+
+
                 var session = cnn.Service.Login(Console.ReadLine(), new ClientMessageHandler());
+
+                Console.WriteLine("Login success");
 
                 for (; ; )
                     session.SendMessage(Console.ReadLine());
