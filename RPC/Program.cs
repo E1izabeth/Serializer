@@ -13,21 +13,22 @@ using MyRpc.Model;
 
 namespace RPC
 {
-    public interface IChatService
+    public interface IChatService : IRemoteObject
     {
         string Ping();
         IChatSession Login(string username, IMessageHandler handler);
     }
 
-    public interface IChatSession
+    public interface IChatSession : IRemoteObject
     {
         void SendMessage(string text);
     }
 
-    public interface IMessageHandler
+    public interface IMessageHandler : IRemoteObject
     {
         void OnMessage(string username, string text);
     }
+
     class ClientMessageHandler : IMessageHandler
     {
         void IMessageHandler.OnMessage(string username, string text)
@@ -89,6 +90,7 @@ namespace RPC
             Console.WriteLine("---------------------------------");
             using (var cnn = _host.Connect(_binaryTcpProtocol, new IPEndPoint(IPAddress.Loopback, 12345)))
             {
+                cnn.Start();
                 Console.WriteLine("Login in progress");
 
                 var sw = new Stopwatch();

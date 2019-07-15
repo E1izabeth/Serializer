@@ -38,14 +38,15 @@ namespace MyRpc.Impl.Transport
         public void ReceivePacketAsync(Action<byte[]> onPacket)
         {
             var len = 0;
-            byte[] buff = null;
+            byte[] buff = new byte[4];
             _stream.BeginRead(buff, 0, 4, ac1 =>
             {
                 _stream.EndRead(ac1);
-
+                len = BitConverter.ToInt32(buff, 0);
+                buff = new byte[len];
                 _stream.BeginRead(buff, 0, len, ac2 =>
                 {
-                    _stream.EndWrite(ac2);
+                    _stream.EndRead(ac2);
 
                     onPacket(buff);
                 }, null);
