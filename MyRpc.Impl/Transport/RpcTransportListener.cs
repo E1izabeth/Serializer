@@ -11,36 +11,24 @@ namespace MyRpc.Impl.Transport
 {
     public class RpcTransportListener : IRpcTransportListener<IPEndPoint, byte[]>
     {
-        public event Action<Exception> OnError = delegate { };
+        //public event Action<Exception> OnError = delegate { };
 
         public IPEndPoint LocalEndPoint { get; }
         // private SocketAsyncEventArgs _acceptAsyncArgs;
-        private Socket _listenSocket;
+        private TcpListener _listener;
 
-        public RpcTransportListener(Socket listenSocket)
+        public RpcTransportListener(IPEndPoint localEndPoint)
         {
-            this._listenSocket = listenSocket;
+            this._listener = new TcpListener(localEndPoint); ;
             // _acceptAsyncArgs = new SocketAsyncEventArgs();
             // _acceptAsyncArgs.Completed += this.AcceptCompleted;
-            this.LocalEndPoint = (IPEndPoint)listenSocket.LocalEndPoint;
+            this.LocalEndPoint = localEndPoint;
         }
 
-        public void AcceptAsync(Action<IRpcTransportAcceptContext<IPEndPoint, byte[]>> onAccepted)
+        public async Task<IRpcTransportAcceptContext<IPEndPoint, byte[]>> AcceptAsync()
         {
-            _listenSocket.BeginAccept(ar =>
-            {
-                try
-                {
-                    var sck = _listenSocket.EndAccept(ar);
-
-                    var acceptContext = new RpcTransportAcceptContext(sck);
-                    onAccepted(acceptContext);
-                }
-                catch (Exception ex)
-                {
-                    this.OnError(ex);
-                }
-            }, null);
+            var sck = await _listener.AcceptSocketAsync();
+            return new RpcTransportAcceptContext(sck);
 
 
             //var acceptArgs = new SocketAsyncEventArgs();
@@ -57,12 +45,12 @@ namespace MyRpc.Impl.Transport
 
         public void Dispose()
         {
-            _listenSocket.Close();
+            _listener.Stop();
         }
 
         public void Start()
         {
-            _listenSocket.Listen(10);
+            _listener.Start(10);
         }
 
         //private void AcceptAsync(SocketAsyncEventArgs e)

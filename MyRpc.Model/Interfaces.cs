@@ -22,19 +22,22 @@ namespace MyRpc.Model
 
         TEndPoint RemoteEndPoint { get; }
 
-        void SendPacketAsync(TPacket packet, Action onSent);
-        void ReceivePacketAsync(Action<TPacket> onPacket);
+        //void SendPacketAsync(TPacket packet, Action onSent);
+        //void ReceivePacketAsync(Action<TPacket> onPacket);
+        Task SendPacketAsync(TPacket packet);
+        Task<TPacket> ReceivePacketAsync();
     }
 
     public interface IRpcTransportListener<TEndPoint, TPacket> : IDisposable
     {
-        event Action<Exception> OnError;
+        // event Action<Exception> OnError;
 
         TEndPoint LocalEndPoint { get; }
 
         void Start();
 
-        void AcceptAsync(Action<IRpcTransportAcceptContext<TEndPoint, TPacket>> onAccepted);
+        //void AcceptAsync(Action<IRpcTransportAcceptContext<TEndPoint, TPacket>> onAccepted);
+        Task<IRpcTransportAcceptContext<TEndPoint, TPacket>> AcceptAsync();
     }
 
     public interface IRpcTransportAcceptContext<TEndPoint, TPacket>
@@ -66,7 +69,8 @@ namespace MyRpc.Model
         TEndPoint LocalEndPoint { get; }
 
         void Start();
-        void AcceptChannelAsync(Action<IRpcChannelAcceptContext<TEndPoint, TSerivce>> onAccept);
+        //void AcceptChannelAsync(Action<IRpcChannelAcceptContext<TEndPoint, TSerivce>> onAccept);
+        Task<IRpcChannelAcceptContext<TEndPoint, TSerivce>> AcceptChannelAsync();
     }
 
     public interface IRpcChannelAcceptContext<TEndPoint, TService>

@@ -35,39 +35,54 @@ namespace MyRpc.Impl.Transport
             _stream.Dispose();
         }
 
-        public void ReceivePacketAsync(Action<byte[]> onPacket)
+        //public void ReceivePacketAsync(Action<byte[]> onPacket)
+        //{
+        //    var len = 0;
+        //    byte[] buff = new byte[4];
+        //    _stream.BeginRead(buff, 0, 4, ac1 =>
+        //    {
+        //        _stream.EndRead(ac1);
+        //        len = BitConverter.ToInt32(buff, 0);
+        //        buff = new byte[len];
+        //        _stream.BeginRead(buff, 0, len, ac2 =>
+        //        {
+        //            _stream.EndRead(ac2);
+
+        //            onPacket(buff);
+        //        }, null);
+        //    }, null);
+        //}
+
+        //public void SendPacketAsync(byte[] packet, Action onSent)
+        //{
+        //    _stream.BeginWrite(BitConverter.GetBytes(packet.Length), 0, 4, ar1 =>
+        //    {
+        //        _stream.EndWrite(ar1);
+
+        //        _stream.BeginWrite(packet, 0, packet.Length, ar2 =>
+        //        {
+        //            _stream.EndWrite(ar2);
+
+        //            onSent();
+        //        }, null);
+        //    }, null);
+        //}
+
+        public async Task SendPacketAsync(byte[] packet)
+        {
+            await _stream.WriteAsync(BitConverter.GetBytes(packet.Length), 0, 4);
+            await _stream.WriteAsync(packet, 0, packet.Length);
+        }
+
+        public async Task<byte[]> ReceivePacketAsync()
         {
             var len = 0;
             byte[] buff = new byte[4];
-            _stream.BeginRead(buff, 0, 4, ac1 =>
-            {
-                _stream.EndRead(ac1);
-                len = BitConverter.ToInt32(buff, 0);
-                buff = new byte[len];
-                _stream.BeginRead(buff, 0, len, ac2 =>
-                {
-                    _stream.EndRead(ac2);
-
-                    onPacket(buff);
-                }, null);
-            }, null);
+            await _stream.ReadAsync(buff, 0, 4);
+            len = BitConverter.ToInt32(buff, 0);
+            buff = new byte[len];
+            await _stream.ReadAsync(buff, 0, len);
+            return buff;
         }
-
-        public void SendPacketAsync(byte[] packet, Action onSent)
-        {
-            _stream.BeginWrite(BitConverter.GetBytes(packet.Length), 0, 4, ar1 =>
-            {
-                _stream.EndWrite(ar1);
-
-                _stream.BeginWrite(packet, 0, packet.Length, ar2 =>
-                {
-                    _stream.EndWrite(ar2);
-
-                    onSent();
-                }, null);
-            }, null);
-        }
-        
-
     }
 }

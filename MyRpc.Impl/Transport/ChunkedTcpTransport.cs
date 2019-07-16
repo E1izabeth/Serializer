@@ -26,9 +26,7 @@ namespace MyRpc.Impl.Transport
 
         IRpcTransportListener<IPEndPoint, byte[]> IRpcTransport<IPEndPoint, byte[]>.CreateListener(IPEndPoint localEndPoint)
         {
-            Socket listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listenSocket.Bind(localEndPoint);
-            return new RpcTransportListener(listenSocket);
+            return new RpcTransportListener(localEndPoint);
         }
     }
 }

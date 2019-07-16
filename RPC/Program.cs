@@ -54,11 +54,11 @@ namespace RPC
             {
                 listener.Start();
 
-                Action<IRpcChannelAcceptContext<IPEndPoint, IChatService>> acceptHandler = null;
-                acceptHandler = ctx =>
+                do
                 {
+                    var ctx = listener.AcceptChannelAsync();
                     var sessionSvcStub = new ChatServiceStub(svc);
-                    var channel = ctx.Confirm(sessionSvcStub);
+                    var channel = ctx.Result.Confirm(sessionSvcStub);
 
                     lock (activeSessions)
                     {
@@ -74,11 +74,33 @@ namespace RPC
                     }
 
                     channel.Start();
+                } while (Console.ReadKey().Key != ConsoleKey.Q);
 
-                    listener.AcceptChannelAsync(acceptHandler);
-                };
+                //Action<IRpcChannelAcceptContext<IPEndPoint, IChatService>> acceptHandler = null;
+                //acceptHandler = ctx =>
+                //{
+                //    var sessionSvcStub = new ChatServiceStub(svc);
+                //    var channel = ctx.Confirm(sessionSvcStub);
 
-                listener.AcceptChannelAsync(acceptHandler);
+                //    lock (activeSessions)
+                //    {
+                //        channel.OnClosed += () =>
+                //        {
+                //            lock (activeSessions)
+                //                activeSessions.Remove(channel);
+
+                //            sessionSvcStub.CleanupSession();
+                //        };
+
+                //        activeSessions.AddLast(channel);
+                //    }
+
+                //    channel.Start();
+
+                //    listener.AcceptChannelAsync(acceptHandler);
+                //};
+
+                //listener.AcceptChannelAsync(acceptHandler);
 
                 Console.ReadLine();
             }
